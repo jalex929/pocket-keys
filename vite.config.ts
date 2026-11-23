@@ -31,6 +31,7 @@ function seoTags(site: string): string {
       name: "Lab",
       url: "https://jayfox.design/lab",
     },
+    sameAs: "https://github.com/jalex929/pocket-keys",
     license: "https://opensource.org/licenses/MIT",
   };
   return [

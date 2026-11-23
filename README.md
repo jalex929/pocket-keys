@@ -4,6 +4,8 @@ A musical keyboard toy in the browser. Tap, slide or type to play; pick from 20 
 (a recorded grand piano, synthesized instruments, synths and sound effects); record a loop and play along; download it as WAV or MIDI to use in a
 project, or share it as a link. Free, no sign-up.
 
+Play it at [jayfox.design/lab/pocket-keys](https://jayfox.design/lab/pocket-keys/).
+
 ![Pocket Keys: a navy toy keyboard with cream keys, a speaker grille and a small display](public/og-image.png)
 
 ## What it does

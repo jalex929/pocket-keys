@@ -148,8 +148,7 @@ Actual latency depends on the device and wasn't measured.
 **Same toolchain as the other Lab apps** (build default): React, Vite, TypeScript (strict),
 Vitest and Playwright, relative paths so it runs at any address.
 
-**No GitHub link in the structured data while the repo is private (2026-11-23, build
-default).** It pointed at a page visitors can't open. Add `sameAs` back if the repo goes public.
+**Public repo (2026-11-23, Jay's call).** The code is public so the Lab page can link to it, and the share data now names the repo (`sameAs`). Before going public the history was checked for secrets and personal details; commits use the GitHub no-reply address.
 
 ## Deliberately not done (yet)
 
