@@ -78,23 +78,24 @@ test.describe("desktop keyboard", () => {
   test("records a loop, plays it back, and downloads WAV and MIDI", async ({ page }) => {
     await countSound(page);
     await page.goto("/");
-    await page.getByRole("button", { name: "Record" }).click();
+    await page.getByRole("button", { name: "Record a loop" }).click();
     for (const code of ["KeyZ", "KeyC", "KeyB"]) {
       await page.keyboard.down(code);
       await page.waitForTimeout(120);
       await page.keyboard.up(code);
     }
-    await page.getByRole("button", { name: "Stop" }).click();
+    await expect(page.locator(".lcd__status")).toContainText("REC 0:");
+    await page.getByRole("button", { name: "Stop recording" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Recorded 3 notes" })).toBeVisible();
 
     const before = await starts(page);
-    await page.getByRole("button", { name: "Play" }).click();
+    await page.getByRole("button", { name: "Play the loop" }).click();
     await expect(page.locator(".lcd__status")).toContainText("LOOP");
     await expect.poll(() => starts(page)).toBeGreaterThan(before);
-    await page.getByRole("button", { name: "Stop" }).click();
+    await page.getByRole("button", { name: "Stop the loop" }).click();
 
     const wav = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Download WAV" }).click();
+    await page.getByRole("button", { name: /^WAV/ }).click();
     const wavFile = await wav;
     expect(wavFile.suggestedFilename()).toMatch(/^pocket-keys-piano-.*\.wav$/);
     const wavBytes = await (await import("node:fs/promises")).readFile((await wavFile.path())!);
@@ -102,7 +103,7 @@ test.describe("desktop keyboard", () => {
     expect(wavBytes.length).toBeGreaterThan(100_000);
 
     const mid = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Download MIDI" }).click();
+    await page.getByRole("button", { name: /^MIDI/ }).click();
     const midFile = await mid;
     expect(midFile.suggestedFilename()).toMatch(/\.mid$/);
   });
@@ -122,6 +123,25 @@ test("opens a shared tune from a link", async ({ page }) => {
   await page.goto("/#tune=1~toy~1e~1o.0.f~1s.f.f~1v.u.f");
   await expect(page.getByText("Someone sent you a tune.")).toBeVisible();
   await expect(page.locator(".lcd__status")).toContainText("3 NOTES");
+});
+
+test("waits for the first note before the recording clock starts", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Record a loop" }).click();
+  await expect(page.locator(".lcd__status")).toContainText("PLAY TO START");
+  await page.waitForTimeout(400);
+  const key = (await page.getByRole("button", { name: "C 4", exact: true }).boundingBox())!;
+  await page.mouse.click(key.x + key.width / 2, key.y + key.height - 15);
+  await expect(page.locator(".lcd__status")).toContainText("REC 0:0");
+  await page.getByRole("button", { name: "Stop recording" }).click();
+  await expect(page.getByRole("button", { name: "Play the loop" })).toBeEnabled();
+});
+
+test("keeps the keys on screen without scrolling", async ({ page }) => {
+  await page.goto("/");
+  const box = (await page.locator(".keys").boundingBox())!;
+  const height = await page.evaluate(() => window.innerHeight);
+  expect(box.y + box.height).toBeLessThanOrEqual(height);
 });
 
 test("fits the screen with no sideways scroll", async ({ page }) => {

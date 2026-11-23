@@ -779,3 +779,299 @@ kbd {
     transition: none !important;
   }
 }
+
+/* ---------- UX pass: transport on the instrument, compact phones ---------- */
+
+/* Rec and Play live on the keyboard itself, like a real toy keyboard, so they're always in reach. */
+.panel {
+  grid-template-columns: auto minmax(180px, 240px) auto 1fr;
+  grid-template-areas:
+    "grille lcd transport voices"
+    "grille lcd transport controls";
+}
+
+.transport {
+  grid-area: transport;
+  display: flex;
+  gap: 10px;
+  align-self: stretch;
+  align-items: center;
+}
+
+.transport__button {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.transport__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.transport__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.5),
+    inset 0 -3px 0 rgba(0, 0, 82, 0.15);
+  transition:
+    transform 60ms,
+    box-shadow 60ms;
+}
+
+.transport__icon::after {
+  content: "";
+  display: block;
+}
+
+.transport__icon--rec::after {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.transport__icon--play::after {
+  width: 18px;
+  height: 20px;
+  margin-left: 4px;
+  background: var(--navy);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.transport__icon--stop::after {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--navy);
+}
+
+.transport__button:active:not(:disabled) .transport__icon,
+.transport__button.is-on .transport__icon {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 82, 0.15);
+}
+
+/* Recording: the button glows red and its label blinks, as well as showing a stop square. */
+.transport__button--rec.is-on .transport__icon {
+  background: #ffe1e1;
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 0 0 3px var(--red),
+    0 0 16px var(--red);
+}
+
+.transport__button.is-on:not(.transport__button--rec) .transport__icon {
+  background: var(--yellow);
+}
+
+.transport__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.transport__button:focus-visible {
+  outline: none;
+}
+
+.transport__button:focus-visible .transport__icon {
+  outline: 3px solid var(--sky);
+  outline-offset: 3px;
+}
+
+/* Save-and-share card: one row of actions once there's a loop. */
+.loop__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.loop__or {
+  margin: 0 2px 0 8px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.button__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.65;
+}
+
+@media (max-width: 860px) {
+  .panel {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "lcd transport"
+      "voices voices"
+      "controls controls";
+  }
+}
+
+/* Phones held upright: keys first. Shorter header, smaller display, controls in tight rows. */
+@media (max-width: 640px) {
+  .topbar {
+    padding-top: 4px;
+  }
+  .stage {
+    gap: 10px;
+    padding-top: 0;
+  }
+  .intro__kicker,
+  .intro__lede {
+    display: none;
+  }
+  .intro__title {
+    font-size: 30px;
+    margin: 0;
+  }
+  .panel {
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .lcd {
+    padding: 6px 10px;
+    gap: 0;
+  }
+  .lcd__note {
+    font-size: 20px;
+  }
+  .lcd__line {
+    font-size: 11px;
+  }
+  .transport {
+    gap: 8px;
+  }
+  .transport__icon {
+    width: 46px;
+    height: 46px;
+  }
+  .voice__body {
+    min-height: 36px;
+    padding: 0 10px 0 8px;
+  }
+  .controls {
+    gap: 8px 14px;
+  }
+  .round {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  .keys {
+    height: clamp(200px, 46dvh, 360px);
+  }
+}
+
+/* Phones use their own volume buttons, so the slider only takes up room there. */
+@media (max-width: 640px) and (pointer: coarse) {
+  .volume {
+    display: none;
+  }
+}
+
+/* Phones held sideways (and other short screens): everything above the keys in one band,
+   and the keys fill the rest of the screen. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .topbar,
+  .intro,
+  .help {
+    display: none;
+  }
+  .stage {
+    padding-top: max(8px, env(safe-area-inset-top));
+    gap: 10px;
+  }
+  .instrument {
+    padding: 8px 10px 10px;
+    border-radius: 16px;
+  }
+  .panel {
+    grid-template-columns: minmax(150px, 190px) auto minmax(0, 1fr);
+    grid-template-areas:
+      "lcd transport voices"
+      "lcd transport controls";
+    gap: 6px 12px;
+    margin-bottom: 8px;
+  }
+  .grille,
+  .voices legend,
+  .volume {
+    display: none;
+  }
+  .lcd {
+    min-height: 0;
+    padding: 4px 8px;
+    gap: 0;
+  }
+  .lcd__note {
+    font-size: 18px;
+  }
+  .lcd__line {
+    font-size: 10px;
+  }
+  .transport__icon {
+    width: 42px;
+    height: 42px;
+  }
+  .transport__label {
+    font-size: 10px;
+  }
+  .voices {
+    display: flex;
+    gap: 6px;
+  }
+  .voice__body {
+    min-height: 32px;
+    padding: 0 10px 0 8px;
+    font-size: 13px;
+  }
+  .controls {
+    gap: 6px 14px;
+  }
+  .round {
+    width: 30px;
+    height: 30px;
+  }
+  .keys {
+    height: max(150px, calc(100dvh - 150px));
+  }
+}
+
+/* Upright phones: the − 0 + stepper speaks for itself, so its word label is for screen readers
+   only, and the three controls fit one row. */
+@media (max-width: 640px) {
+  .controls #octave-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .controls {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+  .switch .label {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+}

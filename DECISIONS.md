@@ -30,6 +30,15 @@ with Web Audio, so there are no samples to license or download.
 **Record a loop and play along** (proposed, approved). Up to 30 seconds, looping in the voice
 it was recorded in, so you can layer a melody over it.
 
+**Rec and Play on the instrument** (proposed after Jay asked for a tighter UI/UX pass). Like a
+real toy keyboard's buttons, they sit on the panel so they're in reach while you play, even on a
+phone. Recording starts on your first note, so loops never open with dead air. The card below
+only appears with actions once there's a loop to share or save.
+
+**Keys first on phones** (same pass). Upright phones drop the intro text and tighten the panel
+so the keys are big and high on the screen; phones held sideways put every control in one band
+and let the keys fill the rest. The volume slider is hidden on phones, which have volume buttons.
+
 **Save your music to use in a project** (Jay's call). A loop downloads as:
 
 - **WAV**, the sound itself, for a video, a game, slides or any audio editor. It's rendered

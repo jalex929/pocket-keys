@@ -28,20 +28,26 @@ const MIN_TUNE_MS = 250;
 
 /**
  * Records notes as they're played. Times come from the caller (performance.now() in the app,
- * plain numbers in tests), so it's deterministic.
+ * plain numbers in tests), so it's deterministic. Without a start time, the clock starts on the
+ * first note, so a loop never opens with dead air.
  */
 export class Recorder {
-  private readonly t0: number;
+  private t0: number | null;
   private readonly open = new Map<number, number>();
   private readonly notes: TuneNote[] = [];
 
-  constructor(startTime: number) {
-    this.t0 = startTime;
+  constructor(startTime?: number) {
+    this.t0 = startTime ?? null;
   }
 
-  /** Time since recording started. */
+  /** True once the clock is running (after the first note, if no start time was given). */
+  get started(): boolean {
+    return this.t0 !== null;
+  }
+
+  /** Time since recording started (0 while waiting for the first note). */
   elapsed(now: number): number {
-    return now - this.t0;
+    return this.t0 === null ? 0 : now - this.t0;
   }
 
   /** True when the recording has hit its time or note limit. */
@@ -50,6 +56,7 @@ export class Recorder {
   }
 
   noteOn(midi: number, now: number) {
+    if (this.t0 === null) this.t0 = now;
     if (this.full(now)) return;
     if (this.open.has(midi)) this.noteOff(midi, now);
     this.open.set(midi, this.elapsed(now));

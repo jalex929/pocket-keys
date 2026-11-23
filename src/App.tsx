@@ -231,10 +231,11 @@ export function App() {
   const startRecording = () => {
     stopPlaying();
     synth.wake();
-    recorder.current = new Recorder(performance.now());
+    // The clock starts on the first note, so the loop doesn't open with silence.
+    recorder.current = new Recorder();
     setRecording(true);
     setShared(false);
-    setMessage("Recording. Play something, then press Stop.");
+    setMessage("Recording starts with your first note. Press Stop when you're done.");
   };
 
   const stopRecording = useCallback(() => {
@@ -244,12 +245,12 @@ export function App() {
     if (!r) return;
     const t = r.stop(performance.now(), live.current.voice);
     if (!t) {
-      setMessage("Nothing was recorded. Press Record and play a few keys.");
+      setMessage("Nothing was recorded. Press Rec, then play a few keys.");
       return;
     }
     setTune(t);
     history.replaceState(null, "", location.pathname + location.search);
-    setMessage(`Recorded ${t.notes.length} notes. Press Play to loop it and play along.`);
+    setMessage(`Recorded ${t.notes.length} notes. Press Play to loop it, then play along.`);
   }, []);
 
   // The clock on the display, and the recording's time limit.
@@ -345,12 +346,14 @@ export function App() {
   const voiceInfo = VOICE_INFO.find((v) => v.id === prefs.voice)!;
 
   const status = recording
-    ? `● REC ${formatTime(clock)} / ${formatTime(MAX_TUNE_MS)}`
+    ? recorder.current?.started
+      ? `● REC ${formatTime(clock)} / ${formatTime(MAX_TUNE_MS)}`
+      : "● REC · PLAY TO START"
     : playing && tune
       ? `▶ LOOP ${formatTime(clock)} / ${formatTime(tune.length)}`
       : tune
         ? `LOOP READY · ${tune.notes.length} NOTES`
-        : "READY";
+        : "PLAY A KEY";
 
   return (
     <div className="app" style={{ ["--voice" as string]: VOICE_COLORS[prefs.voice] }}>
@@ -386,7 +389,7 @@ export function App() {
             <div className="grille" aria-hidden="true" />
 
             <div className="lcd" aria-live="polite" aria-atomic="true">
-              <span className="lcd__note">{lastNote === null ? "—" : noteName(lastNote)}</span>
+              <span className="lcd__note">{lastNote === null ? "♪" : noteName(lastNote)}</span>
               <span className="lcd__line">
                 {voiceInfo.label.toUpperCase()} · {noteName(low)}–{noteName(high)}
                 {sustain ? " · SUSTAIN" : ""}
@@ -394,6 +397,40 @@ export function App() {
               <span className={`lcd__line lcd__status${recording ? " lcd__status--rec" : ""}`}>
                 {status}
               </span>
+            </div>
+
+            <div className="transport" role="group" aria-label="Loop">
+              <button
+                type="button"
+                className={`transport__button transport__button--rec${recording ? " is-on" : ""}`}
+                onClick={recording ? stopRecording : startRecording}
+                aria-pressed={recording}
+                aria-label={recording ? "Stop recording" : "Record a loop"}
+              >
+                <span
+                  className={`transport__icon transport__icon--${recording ? "stop" : "rec"}`}
+                  aria-hidden="true"
+                />
+                <span className="transport__label" aria-hidden="true">
+                  {recording ? "Stop" : "Rec"}
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`transport__button${playing ? " is-on" : ""}`}
+                onClick={togglePlay}
+                disabled={!tune || recording}
+                aria-pressed={playing}
+                aria-label={playing ? "Stop the loop" : "Play the loop"}
+              >
+                <span
+                  className={`transport__icon transport__icon--${playing ? "stop" : "play"}`}
+                  aria-hidden="true"
+                />
+                <span className="transport__label" aria-hidden="true">
+                  {playing ? "Stop" : "Play"}
+                </span>
+              </button>
             </div>
 
             <fieldset className="voices">
@@ -503,87 +540,50 @@ export function App() {
 
         <section className="loop" aria-labelledby="loop-heading">
           <h2 id="loop-heading" className="loop__heading">
-            Loop
+            Your loop
           </h2>
-          <div className="loop__buttons">
-            {recording ? (
-              <button type="button" className="button button--rec" onClick={stopRecording}>
-                <span className="button__icon button__icon--stop" aria-hidden="true" />
-                Stop
-              </button>
-            ) : (
-              <button type="button" className="button button--rec" onClick={startRecording}>
-                <span className="button__icon button__icon--rec" aria-hidden="true" />
-                Record
-              </button>
-            )}
-            <button
-              type="button"
-              className="button"
-              onClick={togglePlay}
-              disabled={!tune || recording}
-              aria-pressed={playing}
-            >
-              <span
-                className={`button__icon button__icon--${playing ? "stop" : "play"}`}
-                aria-hidden="true"
-              />
-              {playing ? "Stop" : "Play"}
-            </button>
-            <button
-              type="button"
-              className="button"
-              onClick={shareTune}
-              disabled={!tune || recording}
-            >
-              Copy link
-            </button>
-            <button
-              type="button"
-              className="button button--quiet"
-              onClick={clearTune}
-              disabled={!tune || recording}
-            >
-              Clear
-            </button>
-          </div>
-          <div className="loop__save" role="group" aria-labelledby="save-label">
-            <span className="label" id="save-label">
-              Save your loop
-            </span>
-            <label className="repeat">
-              <span className="visually-hidden">Repeat the loop</span>
-              <select
-                value={repeats}
-                onChange={(e) => setRepeats(Number(e.target.value))}
-                disabled={!tune || recording}
-              >
-                <option value={1}>Once</option>
-                <option value={2}>Twice</option>
-                <option value={4}>4 times</option>
-              </select>
-            </label>
-            <button
-              type="button"
-              className="button"
-              onClick={downloadWav}
-              disabled={!tune || recording || rendering}
-            >
-              {rendering ? "Making WAV…" : "Download WAV"}
-            </button>
-            <button
-              type="button"
-              className="button"
-              onClick={downloadMidi}
-              disabled={!tune || recording}
-            >
-              Download MIDI
-            </button>
-          </div>
-          <p className="loop__message" role="status">
-            {message ||
-              "Up to 30 seconds. Your loop plays in the voice you recorded it in. What you make is yours to use."}
-          </p>
+          {tune && !recording ? (
+            <>
+              <div className="loop__row">
+                <button type="button" className="button" onClick={shareTune}>
+                  Copy link
+                </button>
+                <span className="loop__or" aria-hidden="true">
+                  or save it
+                </span>
+                <label className="repeat">
+                  <span className="visually-hidden">
+                    How many times the loop repeats in the file
+                  </span>
+                  <select value={repeats} onChange={(e) => setRepeats(Number(e.target.value))}>
+                    <option value={1}>Loop once</option>
+                    <option value={2}>Loop twice</option>
+                    <option value={4}>Loop 4 times</option>
+                  </select>
+                </label>
+                <button type="button" className="button" onClick={downloadWav} disabled={rendering}>
+                  {rendering ? "Making WAV…" : "WAV"}
+                  <span className="button__hint">sound</span>
+                </button>
+                <button type="button" className="button" onClick={downloadMidi}>
+                  MIDI
+                  <span className="button__hint">notes</span>
+                </button>
+                <button type="button" className="button button--quiet" onClick={clearTune}>
+                  Clear
+                </button>
+              </div>
+              <p className="loop__message" role="status">
+                {message ||
+                  `${tune.notes.length} notes, ${formatTime(tune.length)} long. WAV is the sound, for videos, games or slides; MIDI is the notes, for GarageBand or any music app. What you make is yours to use.`}
+              </p>
+            </>
+          ) : (
+            <p className="loop__message" role="status">
+              {message ||
+                "Press Rec on the keyboard and play up to 30 seconds. Then loop it and play along, share it as a link, or save it as WAV or MIDI for a project."}
+            </p>
+          )}
         </section>
 
         <section className="help" aria-labelledby="help-heading">

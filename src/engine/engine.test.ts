@@ -92,6 +92,24 @@ describe("recording", () => {
     expect(new Recorder(0).stop(500, "piano")).toBeNull();
   });
 
+  it("starts the clock on the first note when no start time is given", () => {
+    const r = new Recorder();
+    expect(r.started).toBe(false);
+    expect(r.elapsed(5000)).toBe(0);
+    r.noteOn(60, 5000);
+    r.noteOff(60, 5200);
+    r.noteOn(62, 5400);
+    r.noteOff(62, 5600);
+    expect(r.stop(6000, "toy")).toEqual({
+      voice: "toy",
+      length: 1000,
+      notes: [
+        { midi: 60, start: 0, length: 200 },
+        { midi: 62, start: 400, length: 200 },
+      ],
+    });
+  });
+
   it("stops taking notes at the time limit", () => {
     const r = new Recorder(0);
     r.noteOn(60, MAX_TUNE_MS + 10);
