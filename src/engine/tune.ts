@@ -3,7 +3,31 @@
  * Plain data, so it can be looped, tested and squeezed into a share link.
  */
 
-export const VOICES = ["grand", "piano", "chip", "organ", "toy"] as const;
+export const VOICES = [
+  // Instruments
+  "grand",
+  "epiano",
+  "piano",
+  "organ",
+  "strings",
+  "musicbox",
+  "marimba",
+  "bass",
+  // Synths
+  "chip",
+  "toy",
+  "lead",
+  "pad",
+  // Sound effects
+  "drums",
+  "clap",
+  "laser",
+  "alien",
+  "ufo",
+  "robot",
+  "bubble",
+  "boing",
+] as const;
 export type Voice = (typeof VOICES)[number];
 
 export interface TuneNote {

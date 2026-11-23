@@ -7,6 +7,7 @@
  *   re-voiced and edited.
  */
 
+import { gmDrumNote } from "./drums";
 import type { Tune, Voice } from "./tune";
 
 // ---------- WAV (16-bit PCM) ----------
@@ -80,14 +81,40 @@ export const MIDI_BPM = 120;
 const PPQ = 480;
 const US_PER_BEAT = Math.round(60_000_000 / MIDI_BPM);
 
-/** General MIDI instrument closest to each voice, so the file opens sounding similar. */
-export const MIDI_PROGRAM: Record<Voice, number> = {
+/**
+ * General MIDI instrument closest to each voice, so the file opens sounding similar. "drums"
+ * puts the notes on the drum channel (10) as the matching drum; the clap always plays the
+ * hand clap.
+ */
+export const MIDI_PROGRAM: Record<Voice, number | "drums"> = {
   grand: 0, // Acoustic Grand Piano
+  epiano: 4, // Electric Piano 1
   piano: 0, // Acoustic Grand Piano
-  chip: 80, // Lead 1 (square)
   organ: 16, // Drawbar Organ
+  strings: 48, // String Ensemble 1
+  musicbox: 10, // Music Box
+  marimba: 12, // Marimba
+  bass: 38, // Synth Bass 1
+  chip: 80, // Lead 1 (square)
   toy: 81, // Lead 2 (sawtooth)
+  lead: 81, // Lead 2 (sawtooth)
+  pad: 89, // Pad 2 (warm)
+  drums: "drums",
+  clap: "drums",
+  laser: 80, // Lead 1 (square)
+  alien: 103, // FX 8 (sci-fi)
+  ufo: 103, // FX 8 (sci-fi)
+  robot: 80, // Lead 1 (square)
+  bubble: 98, // FX 3 (crystal)
+  boing: 98, // FX 3 (crystal)
 };
+
+/** The note a key writes to the MIDI file: itself, or its drum on the drum channel. */
+function midiNote(voice: Voice, midi: number): number {
+  if (voice === "clap") return 39; // Hand Clap
+  if (voice === "drums") return gmDrumNote(midi);
+  return midi;
+}
 
 function varLen(n: number): number[] {
   let v = Math.max(0, Math.round(n));
@@ -99,14 +126,17 @@ function varLen(n: number): number[] {
 const msToTicks = (ms: number) => Math.round((ms * PPQ * MIDI_BPM) / 60_000);
 
 export function encodeMidi(tune: Tune, loops = 1): Uint8Array {
+  const program = MIDI_PROGRAM[tune.voice];
+  const channel = program === "drums" ? 9 : 0; // channel 10, counted from 0
   const events: { tick: number; order: number; bytes: number[] }[] = [];
   for (let loop = 0; loop < loops; loop++) {
     const offset = loop * tune.length;
     for (const n of tune.notes) {
       const on = msToTicks(offset + n.start);
       const off = Math.max(on + 1, msToTicks(offset + n.start + n.length));
-      events.push({ tick: on, order: 1, bytes: [0x90, n.midi, 96] });
-      events.push({ tick: off, order: 0, bytes: [0x80, n.midi, 0] });
+      const note = midiNote(tune.voice, n.midi);
+      events.push({ tick: on, order: 1, bytes: [0x90 | channel, note, 96] });
+      events.push({ tick: off, order: 0, bytes: [0x80 | channel, note, 0] });
     }
   }
   // Note-offs before note-ons at the same moment, so a repeated note retriggers cleanly.
@@ -126,9 +156,8 @@ export function encodeMidi(tune: Tune, loops = 1): Uint8Array {
     (US_PER_BEAT >> 16) & 0xff,
     (US_PER_BEAT >> 8) & 0xff,
     US_PER_BEAT & 0xff, // tempo
-    0x00,
-    0xc0,
-    MIDI_PROGRAM[tune.voice], // instrument
+    // Drums need no instrument; everything else picks one.
+    ...(program === "drums" ? [] : [0x00, 0xc0, program]),
   ];
   let last = 0;
   for (const e of events) {

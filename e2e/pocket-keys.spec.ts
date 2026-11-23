@@ -119,7 +119,7 @@ test.describe("desktop keyboard", () => {
     expect(Math.max(...pcm.map(Math.abs))).toBeGreaterThan(1000);
 
     const loop = page.waitForEvent("download");
-    await page.getByRole("button", { name: /^Download seamless loop/ }).click();
+    await page.getByRole("button", { name: /^Download loop/ }).click();
     const loopFile = await loop;
     expect(loopFile.suggestedFilename()).toMatch(/^pocket-keys-grand-loop-.*\.wav$/);
     const loopBytes = await fs.readFile((await loopFile.path())!);
@@ -175,4 +175,26 @@ test("fits the screen with no sideways scroll", async ({ page }) => {
     window.innerWidth,
   ]);
   expect(scroll).toBeLessThanOrEqual(width);
+});
+
+test("picks a sound from the grouped list and plays it", async ({ page }) => {
+  await countSound(page);
+  await page.goto("/");
+  const pick = page.getByRole("combobox", { name: "Sound" });
+  await expect(pick).toHaveValue("grand");
+  await expect(pick.locator("optgroup")).toHaveCount(3);
+  await pick.selectOption({ label: "Drum kit" });
+  await expect(page.locator("#sound-hint")).toHaveText("Every key is a different drum");
+  const before = await starts(page);
+  await page.getByRole("button", { name: "C 4", exact: true }).click();
+  await expect(page.locator(".lcd__note")).toHaveText("KICK");
+  await expect(page.locator(".lcd")).toContainText("DRUM KIT");
+  expect(await starts(page)).toBeGreaterThan(before);
+
+  await pick.selectOption({ label: "Alien" });
+  await page.getByRole("button", { name: "E 4", exact: true }).click();
+  await expect(page.locator(".lcd__note")).toHaveText("E4");
+  // The choice is remembered.
+  await page.reload();
+  await expect(page.getByRole("combobox", { name: "Sound" })).toHaveValue("alien");
 });

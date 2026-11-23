@@ -43,6 +43,23 @@ its sound stopped, so loops and downloads ring the same way you heard them.
 option is its own card with a plain name, the file type and one line on what it's for; once
 saved, the page names the file and says to check Downloads.
 
+**A list of 20 sounds in a dropdown, including sound effects** (Jay's call: a list of sounds,
+with claps, aliens, serious and less serious ones, in a dropdown; the list itself proposed).
+Grouped as Instruments, Synths and Sound effects, with the chosen sound's one-line
+description under the menu. A native dropdown, so it works with touch, keyboard and screen
+readers everywhere; its colored light follows the group, and the name always says which.
+All new sounds are synthesized, so nothing new to license. Effects that are a single hit
+(drums, clap, laser, bubble, boing, music box, marimba) play to the end however briefly the
+key is pressed.
+
+**Drum kit: every key a different drum** (proposed with the list). Laid out the way General
+MIDI lays out drums (kick on C, snare on D, hats on the black keys), so a drum loop saved as
+notes opens in any music app as the same drums, on the drum channel. The display names the
+drum instead of the note.
+
+**Even loudness across sounds** (build default). Each sound was rendered to WAV and measured;
+a per-sound trim brings them within a similar range so switching sounds doesn't jump.
+
 **A seamless loop download, like a GIF for sound** (Jay's idea). One loop exactly, with the
 ringing tail folded back onto the start so it repeats with no gap or click, and a WAV loop
 marker (the `smpl` chunk) for samplers and game engines that read it.

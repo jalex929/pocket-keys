@@ -1,5 +1,5 @@
 /* Pocket Keys: a chunky navy toy keyboard on a light dotted desk.
-   Navy and yellow identity, left-aligned; colored "LEDs" mark the four voices. */
+   Navy and yellow identity, left-aligned; colored "LEDs" mark the kind of sound. */
 
 :root {
   --navy: #000052;
@@ -258,70 +258,65 @@ kbd {
   min-width: 0;
 }
 
-.voices legend {
-  float: left;
-  margin-right: 4px;
-  padding: 0;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.voice {
-  position: relative;
-  cursor: pointer;
-}
-
-.voice input {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.voice__body {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 14px 0 10px;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  background: var(--navy-2);
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 15px;
-  transition:
-    transform 80ms,
-    box-shadow 80ms;
-}
-
 .voice__led {
+  flex: none;
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  opacity: 0.35;
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
-}
-
-.voice input:checked + .voice__body {
-  border-color: var(--yellow);
-  background: #fff;
-  color: var(--navy);
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
-}
-
-.voice input:checked + .voice__body .voice__led {
-  opacity: 1;
   box-shadow:
     0 0 0 2px var(--navy),
     0 0 10px currentColor;
 }
 
-.voice input:focus-visible + .voice__body {
+/* The sound picker: a dropdown, grouped into instruments, synths and sound effects. */
+.sound {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.sound__label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.sound__pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 4px 0 12px;
+  border: 2px solid var(--yellow);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
+}
+
+.sound__pick:focus-within {
   outline: 3px solid var(--sky);
   outline-offset: 2px;
+}
+
+.sound select {
+  min-height: 36px;
+  max-width: 100%;
+  padding: 0 8px 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font: 600 16px var(--font-display);
+  cursor: pointer;
+}
+
+.sound select:focus {
+  outline: none;
+}
+
+.sound__hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
 }
 
 .controls {
@@ -745,17 +740,17 @@ kbd {
   .lcd__note {
     font-size: 24px;
   }
-  .voices legend {
-    display: none;
+  /* Hidden from view but still the dropdown's name for screen readers. */
+  .sound__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   .voices {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-  .voice__body {
-    width: 100%;
-    font-size: 14px;
+    gap: 4px;
   }
   .controls {
     gap: 10px 16px;
@@ -950,10 +945,6 @@ kbd {
     width: 46px;
     height: 46px;
   }
-  .voice__body {
-    min-height: 36px;
-    padding: 0 10px 0 8px;
-  }
   .controls {
     gap: 8px 14px;
   }
@@ -999,9 +990,18 @@ kbd {
     margin-bottom: 8px;
   }
   .grille,
-  .voices legend,
+  .sound__hint,
   .volume {
     display: none;
+  }
+  /* Hidden from view but still the dropdown's name for screen readers. */
+  .sound__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
   .lcd {
     min-height: 0;
@@ -1024,11 +1024,6 @@ kbd {
   .voices {
     display: flex;
     gap: 6px;
-  }
-  .voice__body {
-    min-height: 32px;
-    padding: 0 10px 0 8px;
-    font-size: 13px;
   }
   .controls {
     gap: 6px 14px;
@@ -1055,6 +1050,10 @@ kbd {
   .controls {
     flex-wrap: nowrap;
     justify-content: space-between;
+  }
+  /* No room for the slider in that one row; the device's own volume does the job. */
+  .volume {
+    display: none;
   }
   .switch .label {
     font-size: 11px;

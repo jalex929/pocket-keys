@@ -1,7 +1,7 @@
 # Pocket Keys
 
-A musical keyboard toy in the browser. Tap, slide or type to play; switch between a
-recorded grand piano and synthesized voices; record a loop and play along; download it as WAV or MIDI to use in a
+A musical keyboard toy in the browser. Tap, slide or type to play; pick from 20 sounds
+(a recorded grand piano, synthesized instruments, synths and sound effects); record a loop and play along; download it as WAV or MIDI to use in a
 project, or share it as a link. Free, no sign-up.
 
 ![Pocket Keys: a navy toy keyboard with cream keys, a speaker grille and a small display](public/og-image.png)
@@ -13,8 +13,14 @@ project, or share it as a link. Free, no sign-up.
 - **Computer keyboard:** `Z` to `/` play the lower octave (the row above is the black keys),
   `Q` to `I` the upper octave (the number row is the black keys). Hold `Shift` for sustain;
   `-` and `=` change octave. Or Tab to the keys, arrow between them and press Enter.
-- **Voices:** a grand piano made from real recordings (the Salamander Grand Piano, CC BY 3.0),
-  plus soft keys, chiptune, organ and a wobbly 90s toy, synthesized with Web Audio.
+- **20 sounds in a grouped dropdown**, each with a one-line description:
+  - **Instruments:** grand piano (real recordings: the Salamander Grand Piano, CC BY 3.0),
+    electric piano, soft keys, organ, strings, music box, marimba, bass.
+  - **Synths:** chiptune, 90s toy, synth lead, space pad.
+  - **Sound effects:** drum kit (every key a different drum, named on the display), clap,
+    laser, alien, UFO, robot, bubble, boing.
+  - Everything except the grand piano is synthesized live with Web Audio. Loudness is evened
+    out across sounds, so switching doesn't jump the volume.
 - **Sustain works like a piano's damper pedal:** keys pop back up when you let go, and the
   sound keeps ringing until you lift the pedal (Shift, or the Sustain switch).
 - **Octave, sustain, note names, volume.** Voice, volume and note names are remembered.
@@ -53,7 +59,7 @@ npm run test:e2e   # Playwright, desktop Chrome + Pixel 7 (build first: npm run 
 
 ## Tested
 
-- **Unit (Vitest, 25):** note math and names; the keyboard layout (every letter lands on the
+- **Unit (Vitest, 30):** the drum kit layout and its General MIDI drum-channel export; note math and names; the keyboard layout (every letter lands on the
   right color of key); recording, time limits and loop windows (every note scheduled exactly
   once); share links round-trip and malformed links are rejected; WAV header and samples; MIDI
   structure, instrument, note order and repeats.
@@ -61,8 +67,11 @@ npm run test:e2e   # Playwright, desktop Chrome + Pixel 7 (build first: npm run 
   held (sound confirmed by counting started oscillators and piano recordings); sliding plays each key; computer-key
   chords, Shift sustain (the key pops up, sound keeps going) and octave change; record, loop
   playback, sound, seamless-loop and notes downloads (the WAV is checked to be a real, non-silent
-  file, the loop file carries its loop marker, and the page names each saved file); Tab and Enter; shared links open; no sideways scroll.
-- **Not tested:** whether every app honors the seamless loop's marker (a video editor's own
+  file, the loop file carries its loop marker, and the page names each saved file); picking sounds from the grouped dropdown (drum kit names the drum, the choice is remembered);
+  Tab and Enter; shared links open; no sideways scroll. Every sound was also rendered to WAV
+  and measured for loudness, with no console errors.
+- **Not tested:** how the new sounds feel to a person (only measured, not listened to by
+  ear yet); whether every app honors the seamless loop's marker (a video editor's own
   repeat setting always works); real phones, Safari, Firefox, a screen reader by hand, latency on real
   devices.
 

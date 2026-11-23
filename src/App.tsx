@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LoopPlayer } from "./audio/player";
-import { Synth, VOICE_INFO } from "./audio/synth";
+import { Synth, VOICE_GROUPS, VOICE_INFO, type VoiceGroup } from "./audio/synth";
+import { drumFor } from "./engine/drums";
 import { encodeMidi, fileName } from "./engine/files";
 import { labelsFor, noteForKey } from "./engine/keymap";
 import { baseNote, MAX_SHIFT, MIN_SHIFT, noteName } from "./engine/notes";
@@ -64,12 +65,11 @@ function useOctaves(): 1 | 2 {
   return narrow ? 1 : 2;
 }
 
-const VOICE_COLORS: Record<Voice, string> = {
-  grand: "var(--cream)",
-  piano: "var(--sky)",
-  chip: "var(--green)",
-  organ: "var(--yellow)",
-  toy: "var(--pink)",
+/** Each kind of sound has its own light color (the name always says which, too). */
+const GROUP_COLORS: Record<VoiceGroup, string> = {
+  Instruments: "var(--sky)",
+  Synths: "var(--green)",
+  "Sound effects": "var(--pink)",
 };
 
 function formatTime(ms: number): string {
@@ -379,7 +379,7 @@ export function App() {
         : "PLAY A KEY";
 
   return (
-    <div className="app" style={{ ["--voice" as string]: VOICE_COLORS[prefs.voice] }}>
+    <div className="app" style={{ ["--voice" as string]: GROUP_COLORS[voiceInfo.group] }}>
       <header className="topbar">
         <a className="topbar__back" href={LAB_URL} aria-label="Back to the Lab at jayfox.design">
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -412,7 +412,13 @@ export function App() {
             <div className="grille" aria-hidden="true" />
 
             <div className="lcd" aria-live="polite" aria-atomic="true">
-              <span className="lcd__note">{lastNote === null ? "♪" : noteName(lastNote)}</span>
+              <span className="lcd__note">
+                {lastNote === null
+                  ? "♪"
+                  : prefs.voice === "drums"
+                    ? drumFor(lastNote).toUpperCase()
+                    : noteName(lastNote)}
+              </span>
               <span className="lcd__line">
                 {voiceInfo.label.toUpperCase()} · {noteName(low)}–{noteName(high)}
                 {sustain ? " · SUSTAIN" : ""}
@@ -456,31 +462,39 @@ export function App() {
               </button>
             </div>
 
-            <fieldset className="voices">
-              <legend className="label">Voice</legend>
-              {VOICE_INFO.map((v) => (
-                <label key={v.id} className="voice" title={v.hint}>
-                  <input
-                    type="radio"
-                    name="voice"
-                    value={v.id}
-                    checked={prefs.voice === v.id}
-                    onChange={() => {
-                      setPrefs((p) => ({ ...p, voice: v.id }));
+            <div className="voices">
+              <label className="sound">
+                <span className="label sound__label">Sound</span>
+                <span className="sound__pick">
+                  <span
+                    className="voice__led"
+                    style={{ background: GROUP_COLORS[voiceInfo.group] }}
+                    aria-hidden="true"
+                  />
+                  <select
+                    value={prefs.voice}
+                    aria-describedby="sound-hint"
+                    onChange={(e) => {
+                      setPrefs((p) => ({ ...p, voice: e.target.value as Voice }));
                       synth.wake();
                     }}
-                  />
-                  <span className="voice__body">
-                    <span
-                      className="voice__led"
-                      style={{ background: VOICE_COLORS[v.id] }}
-                      aria-hidden="true"
-                    />
-                    {v.label}
-                  </span>
-                </label>
-              ))}
-            </fieldset>
+                  >
+                    {VOICE_GROUPS.map((group) => (
+                      <optgroup key={group} label={group}>
+                        {VOICE_INFO.filter((v) => v.group === group).map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </span>
+              </label>
+              <p className="sound__hint" id="sound-hint">
+                {voiceInfo.hint}
+              </p>
+            </div>
 
             <div className="controls">
               <div className="control">
@@ -602,11 +616,11 @@ export function App() {
                     onClick={() => void downloadWav(true)}
                     disabled={rendering}
                   >
-                    Download seamless loop
+                    Download loop
                     <span className="button__hint">.wav</span>
                   </button>
                   <p className="save__what">
-                    Like a GIF for sound: exactly one loop with no gap at the end, so it can repeat
+                    Like a GIF for sound: one seamless loop with no gap at the end, so it can repeat
                     forever as background music.
                   </p>
                 </li>
