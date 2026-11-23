@@ -1,0 +1,781 @@
+/* Pocket Keys: a chunky navy toy keyboard on a light dotted desk.
+   Navy and yellow identity, left-aligned; colored "LEDs" mark the four voices. */
+
+:root {
+  --navy: #000052;
+  --navy-2: #12126b;
+  --navy-3: #22228a;
+  --ink: #000052;
+  --muted: #45476b;
+  --desk: #f0f0ff;
+  --dot: rgba(0, 0, 82, 0.13);
+  --cream: #fffaf0;
+  --cream-2: #f1ead8;
+  --yellow: #ffdf3f;
+  --sky: #38bdf8;
+  --pink: #f472d0;
+  --green: #4ade80;
+  --red: #e5484d;
+  --lcd: #d9f0a3;
+  --lcd-ink: #1d2a05;
+  --radius: 14px;
+  --font-display: "Fredoka", "Work Sans", system-ui, sans-serif;
+  --font-body: "Work Sans", system-ui, sans-serif;
+  --font-mono: "Source Code Pro", ui-monospace, monospace;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--desk);
+  background-image: radial-gradient(var(--dot) 1.4px, transparent 1.7px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 0.35em;
+  border: 1.5px solid currentColor;
+  border-bottom-width: 3px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  text-align: center;
+  line-height: 1.45;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sky);
+  outline-offset: 2px;
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  padding: 12px max(16px, env(safe-area-inset-left)) 0;
+}
+
+.topbar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  color: var(--navy);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.topbar__back:hover .topbar__back-text {
+  text-decoration: underline;
+  text-decoration-color: var(--yellow);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+.topbar__back svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- Page ---------- */
+
+.stage {
+  width: min(1120px, 100%);
+  padding: 8px max(16px, env(safe-area-inset-left)) 48px;
+  display: grid;
+  gap: 20px;
+}
+
+.intro__kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.intro__title {
+  margin: 2px 0 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.intro__lede {
+  margin: 0;
+  max-width: 56ch;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.shared {
+  margin: 0;
+  padding: 10px 14px;
+  border: 2px solid var(--navy);
+  border-radius: 10px;
+  background: var(--yellow);
+  font-weight: 600;
+  justify-self: start;
+}
+
+.link-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------- The instrument ---------- */
+
+.instrument {
+  padding: 16px 16px 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--navy-3), var(--navy) 58%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -6px 0 rgba(0, 0, 0, 0.35),
+    10px 12px 0 rgba(0, 0, 82, 0.16);
+  color: #fff;
+}
+
+.panel {
+  display: grid;
+  grid-template-columns: auto minmax(200px, 260px) 1fr;
+  grid-template-areas:
+    "grille lcd voices"
+    "grille lcd controls";
+  gap: 12px 18px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.grille {
+  grid-area: grille;
+  width: 86px;
+  height: 100%;
+  min-height: 96px;
+  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.28);
+  background-image: radial-gradient(rgba(0, 0, 0, 0.55) 2.6px, transparent 3px);
+  background-size: 11px 11px;
+  background-position: 3px 3px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.lcd {
+  grid-area: lcd;
+  display: grid;
+  gap: 2px;
+  min-height: 96px;
+  padding: 8px 12px;
+  border: 3px solid #000030;
+  border-radius: 8px;
+  background: var(--lcd);
+  background-image: linear-gradient(rgba(0, 0, 0, 0.04) 50%, transparent 50%);
+  background-size: 100% 3px;
+  color: var(--lcd-ink);
+  font-family: var(--font-mono);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.lcd__note {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.lcd__line {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lcd__status--rec {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.voices {
+  grid-area: voices;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.voices legend {
+  float: left;
+  margin-right: 4px;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.voice {
+  position: relative;
+  cursor: pointer;
+}
+
+.voice input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.voice__body {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px 0 10px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: var(--navy-2);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  transition:
+    transform 80ms,
+    box-shadow 80ms;
+}
+
+.voice__led {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  opacity: 0.35;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+.voice input:checked + .voice__body {
+  border-color: var(--yellow);
+  background: #fff;
+  color: var(--navy);
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.voice input:checked + .voice__body .voice__led {
+  opacity: 1;
+  box-shadow:
+    0 0 0 2px var(--navy),
+    0 0 10px currentColor;
+}
+
+.voice input:focus-visible + .voice__body {
+  outline: 3px solid var(--sky);
+  outline-offset: 2px;
+}
+
+.controls {
+  grid-area: controls;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 22px;
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control .label {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepper__value {
+  min-width: 2ch;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: center;
+}
+
+.round {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--yellow);
+  color: var(--navy);
+  font: 700 20px/1 var(--font-display);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.round:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.round:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* A slide switch: position and a check show the state, not only color. */
+.switch {
+  position: relative;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.switch__track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.switch__track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 120ms;
+}
+
+.switch input:checked + .switch__track {
+  background: var(--yellow);
+}
+
+.switch input:checked + .switch__track::after {
+  transform: translateX(20px);
+  background: var(--navy);
+  box-shadow: inset 0 0 0 4px var(--navy);
+}
+
+.switch input:focus-visible + .switch__track {
+  outline: 3px solid var(--sky);
+  outline-offset: 2px;
+}
+
+.volume input {
+  width: 110px;
+  accent-color: var(--yellow);
+}
+
+/* ---------- Keys ---------- */
+
+.keys {
+  --white-w: calc(100% / var(--whites));
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--whites), minmax(0, 1fr));
+  height: clamp(170px, 30vw, 250px);
+  padding: 6px;
+  border-radius: 10px;
+  background: #00002a;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.6);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.key {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.key--white {
+  margin: 0 1.5px;
+  border-radius: 0 0 9px 9px;
+  background: linear-gradient(180deg, var(--cream-2), var(--cream) 14%);
+  box-shadow:
+    inset 0 -8px 0 var(--cream-2),
+    0 3px 0 rgba(0, 0, 0, 0.5);
+  color: var(--navy);
+  transition:
+    transform 50ms,
+    box-shadow 50ms;
+}
+
+.key--black {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  left: calc(6px + (100% - 12px) * var(--at) / var(--whites));
+  width: calc((100% - 12px) / var(--whites) * 0.62);
+  height: 60%;
+  transform: translateX(-50%);
+  border-radius: 0 0 7px 7px;
+  background: linear-gradient(180deg, #2a2a7a, var(--navy-2) 70%, #05053a);
+  box-shadow:
+    inset 0 -6px 0 #05053a,
+    0 3px 0 rgba(0, 0, 0, 0.6);
+  color: #fff;
+  transition:
+    transform 50ms,
+    box-shadow 50ms;
+}
+
+/* Pressed: the key sinks and a dot lights, so state never relies on color alone. */
+.key--white.key--on {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 -3px 0 var(--cream-2),
+    0 0 0 rgba(0, 0, 0, 0.5);
+  background: linear-gradient(180deg, var(--cream-2), #fff3c4 20%);
+}
+
+.key--black.key--on {
+  transform: translateX(-50%) translateY(3px);
+  box-shadow:
+    inset 0 -2px 0 #05053a,
+    0 0 0 rgba(0, 0, 0, 0.6);
+}
+
+.key__marks {
+  position: absolute;
+  inset: auto 0 12px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.key--black .key__marks {
+  bottom: 8px;
+}
+
+.key__kbd {
+  min-width: 0;
+  padding: 0 0.3em;
+  border-width: 1px 1px 2px;
+  font-size: 11px;
+  opacity: 0.55;
+}
+
+.key__name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.key--black .key__name {
+  font-size: 9px;
+}
+
+.key__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgba(0, 0, 82, 0.18);
+}
+
+.key--black .key__dot {
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.2);
+}
+
+.key--on .key__dot {
+  background: var(--voice);
+  box-shadow:
+    0 0 0 2px var(--navy),
+    0 0 10px var(--voice);
+}
+
+.key:focus-visible {
+  outline: 3px solid var(--sky);
+  outline-offset: -3px;
+  z-index: 3;
+}
+
+/* Letters only help with a physical keyboard. */
+@media (hover: none), (pointer: coarse) {
+  .key__kbd {
+    display: none;
+  }
+}
+
+/* ---------- Loop ---------- */
+
+.loop,
+.help {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 2px solid var(--navy);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: 6px 7px 0 rgba(0, 0, 82, 0.12);
+}
+
+.loop__heading,
+.help__heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.loop__buttons,
+.loop__save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.loop__save .label {
+  margin-right: 4px;
+  color: var(--muted);
+}
+
+.loop__message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid var(--navy);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font: 600 16px/1 var(--font-display);
+  box-shadow: 0 3px 0 var(--navy);
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  background: #fffbe6;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--navy);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.button--rec {
+  background: var(--yellow);
+}
+
+.button--rec:hover:not(:disabled) {
+  background: #ffe866;
+}
+
+.button--quiet {
+  border-color: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.button[aria-pressed="true"] {
+  background: var(--navy);
+  color: #fff;
+}
+
+.button__icon {
+  width: 12px;
+  height: 12px;
+  background: currentColor;
+}
+
+.button__icon--rec {
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 2px var(--navy);
+}
+
+.button__icon--stop {
+  border-radius: 2px;
+}
+
+.button__icon--play {
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+.repeat select {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 2px solid var(--navy);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--navy);
+  font: 600 15px var(--font-body);
+}
+
+.repeat select:disabled {
+  opacity: 0.4;
+}
+
+.help__list {
+  margin: 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.help__list kbd {
+  color: var(--navy);
+}
+
+/* Touch screens: the keyboard-shortcut card isn't useful. */
+@media (hover: none) and (pointer: coarse) {
+  .help {
+    display: none;
+  }
+}
+
+/* ---------- Smaller screens ---------- */
+
+@media (max-width: 860px) {
+  .panel {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "lcd lcd"
+      "voices voices"
+      "controls controls";
+  }
+  .grille {
+    display: none;
+  }
+  .lcd {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .stage {
+    gap: 14px;
+  }
+  .intro__lede {
+    font-size: 15px;
+  }
+  .instrument {
+    padding: 12px 10px 12px;
+    border-radius: 18px;
+  }
+  .lcd__note {
+    font-size: 24px;
+  }
+  .voices legend {
+    display: none;
+  }
+  .voices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .voice__body {
+    width: 100%;
+    font-size: 14px;
+  }
+  .controls {
+    gap: 10px 16px;
+  }
+  .volume {
+    flex: 1 1 100%;
+  }
+  .volume input {
+    flex: 1;
+  }
+  .keys {
+    height: clamp(180px, 42vh, 280px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Source+Code+Pro:wght@600&family=Work+Sans:wght@500;600&display=block"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        font-family: "Work Sans", sans-serif;
+        color: #000052;
+        background: #f0f0ff;
+        background-image: radial-gradient(rgba(0, 0, 82, 0.14) 1.5px, transparent 1.8px);
+        background-size: 26px 26px;
+        position: relative;
+      }
+      .text {
+        position: absolute;
+        left: 72px;
+        top: 64px;
+        width: 420px;
+      }
+      .kicker {
+        font-family: "Source Code Pro", monospace;
+        font-size: 22px;
+        color: #45476b;
+      }
+      h1 {
+        font-family: Fredoka, sans-serif;
+        font-weight: 700;
+        font-size: 92px;
+        line-height: 0.95;
+        margin: 14px 0 22px;
+        letter-spacing: -1px;
+      }
+      .lede {
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin-top: 26px;
+        display: grid;
+        gap: 10px;
+        font-size: 21px;
+        color: #2c2e55;
+      }
+      li::before {
+        content: "";
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 12px;
+        border: 2px solid #000052;
+        vertical-align: 1px;
+      }
+      li:nth-child(1)::before {
+        background: #38bdf8;
+      }
+      li:nth-child(2)::before {
+        background: #ffdf3f;
+      }
+      li:nth-child(3)::before {
+        background: #f472d0;
+      }
+      .by {
+        position: absolute;
+        left: 72px;
+        bottom: 44px;
+        font-family: "Source Code Pro", monospace;
+        font-size: 18px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .inst {
+        position: absolute;
+        left: 500px;
+        top: 150px;
+        width: 660px;
+        transform: rotate(-2.5deg);
+        filter: drop-shadow(14px 16px 0 #ffdf3f);
+      }
+      .inst img {
+        width: 100%;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="text">
+      <p class="kicker">// a keyboard you can pocket</p>
+      <h1>Pocket Keys</h1>
+      <p class="lede">Play, loop and share little tunes in your browser.</p>
+      <ul>
+        <li>Four voices, 90s toy included</li>
+        <li>Record a loop and play along</li>
+        <li>Download WAV or MIDI</li>
+      </ul>
+    </div>
+    <p class="by">jayfox.design/lab</p>
+    <div class="inst"><img src="instrument.png" alt="" /></div>
+  </body>
+</html>
