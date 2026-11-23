@@ -27,6 +27,26 @@ Phones held upright show one octave so keys stay finger-sized; wider screens sho
 wobbly "90s toy" voice. The 90s toy voice ties it to Tiny Canvas's 90s mode. Synthesized live
 with Web Audio, so there are no samples to license or download.
 
+**A real grand piano, from recordings** (Jay asked for a classic piano sound; recordings
+proposed, approved). Synthesis can't make a convincing acoustic piano, so this one voice plays
+the Salamander Grand Piano (a Yamaha C5), CC BY 3.0 by Alexander Holm, credited on the page and
+in the README. 29 notes, about 1.9 MB of MP3s, loaded after the first tap; every other key is
+pitched from a recording at most 1.5 semitones away. It's the new default. Until the files
+arrive, the piano falls back to the synthesized soft keys, so the first notes never go silent.
+Trade-off: the only part of the app that isn't synthesized, and a download on first play.
+
+**Sustain is a damper pedal, not a key lock** (Jay's call). Letting go of a key pops it back
+up; sustain only lets the sound ring on until the pedal lifts. Recordings keep each note until
+its sound stopped, so loops and downloads ring the same way you heard them.
+
+**Say what each save option gives you** (Jay's call: it wasn't clear you were saving). Each
+option is its own card with a plain name, the file type and one line on what it's for; once
+saved, the page names the file and says to check Downloads.
+
+**A seamless loop download, like a GIF for sound** (Jay's idea). One loop exactly, with the
+ringing tail folded back onto the start so it repeats with no gap or click, and a WAV loop
+marker (the `smpl` chunk) for samplers and game engines that read it.
+
 **Record a loop and play along** (proposed, approved). Up to 30 seconds, looping in the voice
 it was recorded in, so you can layer a melody over it.
 

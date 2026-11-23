@@ -895,20 +895,6 @@ kbd {
   outline-offset: 3px;
 }
 
-/* Save-and-share card: one row of actions once there's a loop. */
-.loop__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.loop__or {
-  margin: 0 2px 0 8px;
-  color: var(--muted);
-  font-size: 15px;
-}
-
 .button__hint {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1074,4 +1060,65 @@ kbd {
     font-size: 11px;
     letter-spacing: 0.04em;
   }
+}
+
+/* Save options: each one says what you get before you click. */
+.loop__summary {
+  margin: 0;
+  font-size: 15px;
+}
+
+.saves {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.save {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid var(--dot);
+  border-radius: 12px;
+  background: var(--cream);
+}
+
+.save__what {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.save__label {
+  margin-right: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.loop__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.loop__saved {
+  color: var(--ink);
+}
+
+.help__credit {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.help__credit a {
+  color: var(--ink);
 }

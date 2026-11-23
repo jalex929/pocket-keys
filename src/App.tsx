@@ -30,7 +30,7 @@ interface Prefs {
 }
 
 function loadPrefs(): Prefs {
-  const fallback: Prefs = { voice: "piano", volume: 0.7, showNames: false };
+  const fallback: Prefs = { voice: "grand", volume: 0.7, showNames: false };
   try {
     const raw = JSON.parse(localStorage.getItem(PREFS_KEY) ?? "null") as Partial<Prefs> | null;
     if (!raw) return fallback;
@@ -65,6 +65,7 @@ function useOctaves(): 1 | 2 {
 }
 
 const VOICE_COLORS: Record<Voice, string> = {
+  grand: "var(--cream)",
   piano: "var(--sky)",
   chip: "var(--green)",
   organ: "var(--yellow)",
@@ -96,6 +97,7 @@ export function App() {
   const [clock, setClock] = useState(0);
   const [message, setMessage] = useState("");
   const [repeats, setRepeats] = useState(1);
+  const [savedFile, setSavedFile] = useState("");
   const [rendering, setRendering] = useState(false);
   const octaves = useOctaves();
 
@@ -133,19 +135,28 @@ export function App() {
 
   // ---------- Playing notes ----------
 
-  const letGo = useCallback((h: Held) => {
+  // A key pops back up as soon as you let go of it. Sustain only keeps the sound ringing, like
+  // the damper pedal on a piano, so the light and the sound are let go of separately.
+  const unlight = useCallback((h: Held) => setUserLit((m) => bump(m, h.midi, -1)), []);
+  const silence = useCallback((h: Held) => {
     h.release();
     recorder.current?.noteOff(h.midi, performance.now());
-    setUserLit((m) => bump(m, h.midi, -1));
   }, []);
+  const letGo = useCallback(
+    (h: Held) => {
+      unlight(h);
+      if (live.current.sustain) sustained.current.push(h);
+      else silence(h);
+    },
+    [unlight, silence],
+  );
 
   const noteDown = useCallback(
     (source: string, midi: number) => {
       const previous = held.current.get(source);
       if (previous) {
         held.current.delete(source);
-        if (live.current.sustain) sustained.current.push(previous);
-        else letGo(previous);
+        letGo(previous);
       }
       const release = synth.noteOn(midi, live.current.voice);
       held.current.set(source, { midi, release });
@@ -161,17 +172,16 @@ export function App() {
       const h = held.current.get(source);
       if (!h) return;
       held.current.delete(source);
-      if (live.current.sustain) sustained.current.push(h);
-      else letGo(h);
+      letGo(h);
     },
     [letGo],
   );
 
-  // Lifting the pedal lets go of everything it was holding.
+  // Lifting the pedal silences everything it was holding (those keys are already back up).
   useEffect(() => {
     if (sustain) return;
-    for (const h of sustained.current.splice(0)) letGo(h);
-  }, [sustain, letGo]);
+    for (const h of sustained.current.splice(0)) silence(h);
+  }, [sustain, silence]);
 
   const releaseAll = useCallback(() => {
     for (const source of [...held.current.keys()]) noteUp(source);
@@ -249,6 +259,7 @@ export function App() {
       return;
     }
     setTune(t);
+    setSavedFile("");
     history.replaceState(null, "", location.pathname + location.search);
     setMessage(`Recorded ${t.notes.length} notes. Press Play to loop it, then play along.`);
   }, []);
@@ -284,6 +295,7 @@ export function App() {
   const clearTune = () => {
     stopPlaying();
     setTune(null);
+    setSavedFile("");
     setShared(false);
     history.replaceState(null, "", location.pathname + location.search);
     setMessage("Loop cleared.");
@@ -291,6 +303,7 @@ export function App() {
 
   const shareTune = async () => {
     if (!tune) return;
+    setSavedFile("");
     const url = `${location.origin}${location.pathname}#tune=${encodeURIComponent(encodeTune(tune))}`;
     try {
       await navigator.clipboard.writeText(url);
@@ -312,16 +325,23 @@ export function App() {
     window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
-  const downloadWav = async () => {
+  const downloadWav = async (seamless: boolean) => {
     if (!tune || rendering) return;
     setRendering(true);
-    setMessage("Making your WAV file…");
+    setSavedFile("");
+    setMessage(seamless ? "Making your seamless loop…" : "Making your sound file…");
     try {
       const { renderWav } = await import("./audio/render");
-      save(await renderWav(tune, repeats), "audio/wav", fileName(tune.voice, "wav"));
-      setMessage("WAV saved. Use it in a video, a game, slides or any audio editor.");
+      const name = fileName(tune.voice, "wav", new Date(), seamless ? "loop" : "");
+      save(await renderWav(tune, { loops: repeats, seamless }), "audio/wav", name);
+      setSavedFile(name);
+      setMessage(
+        seamless
+          ? "Check your Downloads. Set it to repeat in a video editor, game or slideshow and it plays with no gap."
+          : "Check your Downloads. It plays in any music player and drops into a video, game or slides.",
+      );
     } catch {
-      setMessage("This browser couldn't make the WAV file. Try the MIDI download instead.");
+      setMessage("This browser couldn't make the sound file. Try the notes download instead.");
     } finally {
       setRendering(false);
     }
@@ -329,9 +349,12 @@ export function App() {
 
   const downloadMidi = () => {
     if (!tune) return;
-    save(encodeMidi(tune, repeats), "audio/midi", fileName(tune.voice, "mid"));
+    setSavedFile("");
+    const name = fileName(tune.voice, "mid");
+    save(encodeMidi(tune, repeats), "audio/midi", name);
+    setSavedFile(name);
     setMessage(
-      "MIDI saved. Open it in GarageBand, Logic, Ableton or MuseScore to change the sound or edit notes.",
+      "Check your Downloads. It's the notes, not a recording: open it in GarageBand, MuseScore or another music app to pick any instrument or fix a note.",
     );
   };
 
@@ -544,38 +567,76 @@ export function App() {
           </h2>
           {tune && !recording ? (
             <>
-              <div className="loop__row">
-                <button type="button" className="button" onClick={shareTune}>
-                  Copy link
-                </button>
-                <span className="loop__or" aria-hidden="true">
-                  or save it
-                </span>
+              <p className="loop__summary">
+                {tune.notes.length} notes, {formatTime(tune.length)} long. What you make is yours to
+                use.
+              </p>
+              <ul className="saves">
+                <li className="save">
+                  <button type="button" className="button" onClick={shareTune}>
+                    Copy link
+                  </button>
+                  <p className="save__what">
+                    A web link that plays your loop on this page. Nothing to download.
+                  </p>
+                </li>
+                <li className="save">
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => void downloadWav(false)}
+                    disabled={rendering}
+                  >
+                    Download sound
+                    <span className="button__hint">.wav</span>
+                  </button>
+                  <p className="save__what">
+                    A recording of what you heard. Plays anywhere; drop it into a video, game or
+                    slides.
+                  </p>
+                </li>
+                <li className="save">
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => void downloadWav(true)}
+                    disabled={rendering}
+                  >
+                    Download seamless loop
+                    <span className="button__hint">.wav</span>
+                  </button>
+                  <p className="save__what">
+                    Like a GIF for sound: exactly one loop with no gap at the end, so it can repeat
+                    forever as background music.
+                  </p>
+                </li>
+                <li className="save">
+                  <button type="button" className="button" onClick={downloadMidi}>
+                    Download notes
+                    <span className="button__hint">.mid</span>
+                  </button>
+                  <p className="save__what">
+                    Just the notes, not the sound. Open it in GarageBand or MuseScore to change the
+                    instrument or edit notes.
+                  </p>
+                </li>
+              </ul>
+              <div className="loop__foot">
                 <label className="repeat">
-                  <span className="visually-hidden">
-                    How many times the loop repeats in the file
-                  </span>
+                  <span className="save__label">Sound and notes files play the loop</span>
                   <select value={repeats} onChange={(e) => setRepeats(Number(e.target.value))}>
-                    <option value={1}>Loop once</option>
-                    <option value={2}>Loop twice</option>
-                    <option value={4}>Loop 4 times</option>
+                    <option value={1}>once</option>
+                    <option value={2}>twice</option>
+                    <option value={4}>4 times</option>
                   </select>
                 </label>
-                <button type="button" className="button" onClick={downloadWav} disabled={rendering}>
-                  {rendering ? "Making WAV…" : "WAV"}
-                  <span className="button__hint">sound</span>
-                </button>
-                <button type="button" className="button" onClick={downloadMidi}>
-                  MIDI
-                  <span className="button__hint">notes</span>
-                </button>
                 <button type="button" className="button button--quiet" onClick={clearTune}>
-                  Clear
+                  Clear this loop
                 </button>
               </div>
               <p className="loop__message" role="status">
-                {message ||
-                  `${tune.notes.length} notes, ${formatTime(tune.length)} long. WAV is the sound, for videos, games or slides; MIDI is the notes, for GarageBand or any music app. What you make is yours to use.`}
+                {savedFile ? <strong className="loop__saved">Saved {savedFile}. </strong> : null}
+                {message}
               </p>
             </>
           ) : (
@@ -602,6 +663,13 @@ export function App() {
               Or Tab to the keys: arrow keys move, <kbd>Enter</kbd> plays.
             </li>
           </ul>
+          <p className="help__credit">
+            Grand piano recordings:{" "}
+            <a href="https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html">
+              Salamander Grand Piano
+            </a>{" "}
+            by Alexander Holm, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
+          </p>
         </section>
       </main>
     </div>

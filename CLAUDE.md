@@ -5,8 +5,10 @@ Read `README.md` and `DECISIONS.md` first.
 - Record every product, design or engineering decision in `DECISIONS.md`: what, why, the
   trade-off, and who made the call (Jay's call / proposed, approved / build default).
 - Logic stays in `src/engine` (plain TypeScript, no React, no audio) and is unit tested there.
-- Sound is synthesized (Web Audio), never sampled: nothing to license. No recreated demo songs,
-  preset names or panel layouts from a real keyboard brand.
+- Sound is synthesized (Web Audio). The one exception is the grand piano, which plays the
+  Salamander Grand Piano recordings (CC BY 3.0, credit kept on the page and in the README). Any
+  other recording needs a license that allows public use, checked at its original source, and
+  a credit. No recreated demo songs, preset names or panel layouts from a real keyboard brand.
 - Loop playback is scheduled on the audio clock, not timers; keep it that way.
 - Left-aligned, navy (#000052) / yellow (#FFDF3F) identity; never show state by color alone;
   every control reachable by keyboard; respect reduced motion.

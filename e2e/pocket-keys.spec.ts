@@ -1,16 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 
-/** Counts oscillators started, so tests can tell that sound was actually made. */
+/**
+ * Counts sounds started (synth oscillators and piano recordings), so tests can tell that sound
+ * was actually made.
+ */
 async function countSound(page: Page) {
   await page.addInitScript(() => {
     const w = window as unknown as { __starts: number };
     w.__starts = 0;
-    const proto = OscillatorNode.prototype as unknown as { start: (...a: unknown[]) => void };
-    const original = proto.start;
-    proto.start = function (this: unknown, ...args: unknown[]) {
-      w.__starts++;
-      return original.apply(this, args);
-    };
+    for (const node of [OscillatorNode, AudioBufferSourceNode]) {
+      const proto = node.prototype as unknown as { start: (...a: unknown[]) => void };
+      const original = proto.start;
+      proto.start = function (this: unknown, ...args: unknown[]) {
+        w.__starts++;
+        return original.apply(this, args);
+      };
+    }
   });
 }
 const starts = (page: Page) =>
@@ -56,6 +61,7 @@ test.describe("desktop keyboard", () => {
   test("computer keys play chords, Shift sustains and minus/equals change octave", async ({
     page,
   }) => {
+    await countSound(page);
     await page.goto("/");
     await page.keyboard.down("KeyZ");
     await page.keyboard.down("KeyC");
@@ -64,12 +70,17 @@ test.describe("desktop keyboard", () => {
     await page.keyboard.up("KeyC");
     await expect(page.locator(".key--on")).toHaveCount(0);
 
+    // Sustain is a damper pedal: the key pops back up, only the sound keeps ringing.
     await page.keyboard.down("Shift");
+    await expect(page.locator(".lcd")).toContainText("SUSTAIN");
+    const before = await starts(page);
     await page.keyboard.down("KeyZ");
-    await page.keyboard.up("KeyZ");
     await expect(page.locator(".key--on")).toHaveCount(1);
-    await page.keyboard.up("Shift");
+    await page.keyboard.up("KeyZ");
     await expect(page.locator(".key--on")).toHaveCount(0);
+    expect(await starts(page)).toBeGreaterThan(before);
+    await page.keyboard.up("Shift");
+    await expect(page.locator(".lcd")).not.toContainText("SUSTAIN");
 
     await page.keyboard.press("Equal");
     await expect(page.locator(".lcd")).toContainText("C5–C7");
@@ -94,18 +105,31 @@ test.describe("desktop keyboard", () => {
     await expect.poll(() => starts(page)).toBeGreaterThan(before);
     await page.getByRole("button", { name: "Stop the loop" }).click();
 
+    const fs = await import("node:fs/promises");
     const wav = page.waitForEvent("download");
-    await page.getByRole("button", { name: /^WAV/ }).click();
+    await page.getByRole("button", { name: /^Download sound/ }).click();
     const wavFile = await wav;
-    expect(wavFile.suggestedFilename()).toMatch(/^pocket-keys-piano-.*\.wav$/);
-    const wavBytes = await (await import("node:fs/promises")).readFile((await wavFile.path())!);
+    expect(wavFile.suggestedFilename()).toMatch(/^pocket-keys-grand-.*\.wav$/);
+    const wavBytes = await fs.readFile((await wavFile.path())!);
     expect(wavBytes.subarray(0, 4).toString()).toBe("RIFF");
     expect(wavBytes.length).toBeGreaterThan(100_000);
+    await expect(page.getByRole("status")).toContainText(`Saved ${wavFile.suggestedFilename()}`);
+    // The piano recordings made it into the file: it isn't silent.
+    const pcm = new Int16Array(wavBytes.buffer, wavBytes.byteOffset + 44, 20_000);
+    expect(Math.max(...pcm.map(Math.abs))).toBeGreaterThan(1000);
+
+    const loop = page.waitForEvent("download");
+    await page.getByRole("button", { name: /^Download seamless loop/ }).click();
+    const loopFile = await loop;
+    expect(loopFile.suggestedFilename()).toMatch(/^pocket-keys-grand-loop-.*\.wav$/);
+    const loopBytes = await fs.readFile((await loopFile.path())!);
+    expect(loopBytes.includes(Buffer.from("smpl"))).toBe(true);
 
     const mid = page.waitForEvent("download");
-    await page.getByRole("button", { name: /^MIDI/ }).click();
+    await page.getByRole("button", { name: /^Download notes/ }).click();
     const midFile = await mid;
     expect(midFile.suggestedFilename()).toMatch(/\.mid$/);
+    await expect(page.getByRole("status")).toContainText("not a recording");
   });
 
   test("keys are reachable by Tab and play with Enter", async ({ page }) => {

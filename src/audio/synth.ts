@@ -1,7 +1,8 @@
 /**
- * The instrument: four voices synthesized live with the Web Audio API. No samples, so nothing
- * to download or license. The audio context is created on the first tap or key press, because
- * browsers only allow sound after the person interacts.
+ * The instrument. The grand piano plays recordings of a real piano (the Salamander Grand Piano,
+ * CC BY 3.0, credited on the page); the other voices are synthesized live with the Web Audio API.
+ * The audio context is created on the first tap or key press, because browsers only allow sound
+ * after the person interacts.
  */
 
 import { frequency } from "../engine/notes";
@@ -14,6 +15,7 @@ export interface VoiceInfo {
 }
 
 export const VOICE_INFO: VoiceInfo[] = [
+  { id: "grand", label: "Grand piano", hint: "A real grand piano, recorded" },
   { id: "piano", label: "Soft keys", hint: "Gentle, like a felt piano" },
   { id: "chip", label: "Chiptune", hint: "Bleepy 8-bit square wave" },
   { id: "organ", label: "Organ", hint: "Rings while you hold it" },
@@ -22,6 +24,50 @@ export const VOICE_INFO: VoiceInfo[] = [
 
 /** How many notes can sound at once; the oldest is let go past this. */
 const MAX_POLYPHONY = 16;
+
+// ---------- Grand piano samples ----------
+
+/** Recorded notes: C, D#, F# and A in octaves 1 to 7, plus C8. Others are pitched from the nearest. */
+const SAMPLE_NAMES = ["C", "Ds", "Fs", "A"];
+const SAMPLE_OFFSETS = [0, 3, 6, 9];
+export const PIANO_SAMPLES: { midi: number; file: string }[] = [
+  ...[1, 2, 3, 4, 5, 6, 7].flatMap((octave) =>
+    SAMPLE_NAMES.map((name, i) => ({
+      midi: (octave + 1) * 12 + SAMPLE_OFFSETS[i]!,
+      file: `${name}${octave}.mp3`,
+    })),
+  ),
+  { midi: 108, file: "C8.mp3" },
+];
+
+/** The nearest recorded note to `midi` (at most 1.5 semitones away inside the range). */
+export function nearestSample(midi: number): number {
+  let best = PIANO_SAMPLES[0]!.midi;
+  for (const { midi: m } of PIANO_SAMPLES) if (Math.abs(m - midi) < Math.abs(best - midi)) best = m;
+  return best;
+}
+
+// Decoded audio isn't tied to one context, so the speakers and the WAV renderer share it.
+const pianoBuffers = new Map<number, AudioBuffer>();
+let pianoLoading: Promise<void> | null = null;
+
+function loadPiano(ctx: BaseAudioContext): Promise<void> {
+  if (pianoLoading) return pianoLoading;
+  if (typeof fetch !== "function") return Promise.resolve();
+  const base = `${import.meta.env.BASE_URL}samples/piano/`;
+  pianoLoading = Promise.all(
+    PIANO_SAMPLES.map(async ({ midi, file }) => {
+      try {
+        const res = await fetch(base + file);
+        if (!res.ok) return;
+        pianoBuffers.set(midi, await ctx.decodeAudioData(await res.arrayBuffer()));
+      } catch {
+        // A missing note falls back to the synthesized piano.
+      }
+    }),
+  ).then(() => undefined);
+  return pianoLoading;
+}
 
 interface Sounding {
   midi: number;
@@ -77,7 +123,13 @@ export class Synth {
       const imag = new Float32Array(n);
       for (let k = 1; k < n; k++) imag[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * 0.25);
       this.pulse = this.ctx.createPeriodicWave(real, imag);
+      void loadPiano(this.ctx);
     }
+  }
+
+  /** Resolves once the piano recordings are loaded (or have failed to). */
+  ready(): Promise<void> {
+    return this.ctx ? loadPiano(this.ctx) : Promise.resolve();
   }
 
   /** Current audio time, or 0 before the first sound. */
@@ -132,7 +184,7 @@ export class Synth {
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
     filter.connect(env).connect(out);
-    const oscs: OscillatorNode[] = [];
+    const oscs: AudioScheduledSourceNode[] = [];
     const osc = (type: OscillatorType | "pulse", freq: number, gain: number, detune = 0) => {
       const o = ctx.createOscillator();
       if (type === "pulse" && this.pulse) o.setPeriodicWave(this.pulse);
@@ -150,7 +202,23 @@ export class Synth {
     const level = 0.32 * Math.min(1, 1.25 - (midi - 60) / 96);
     let release = 0.25;
 
+    const sample = voice === "grand" ? pianoBuffers.get(nearestSample(midi)) : undefined;
+    if (voice === "grand" && !sample) voice = "piano"; // still loading: use the synth piano
+
     switch (voice) {
+      case "grand": {
+        // The recording does its own strike and decay; releasing lets the damper fall.
+        const src = ctx.createBufferSource();
+        src.buffer = sample!;
+        src.playbackRate.value = Math.pow(2, (midi - nearestSample(midi)) / 12);
+        src.connect(filter);
+        filter.frequency.value = 18000;
+        src.start(t);
+        oscs.push(src);
+        env.gain.setValueAtTime(level * 4, t);
+        release = 0.45;
+        break;
+      }
       case "piano": {
         // Struck and fading: bright at the hit, mellowing as it decays.
         osc("triangle", f, 0.8);

@@ -2,6 +2,7 @@
  * Download formats, as plain byte builders (no audio, no DOM), so they can be unit tested.
  *
  * - WAV: the sound itself, for video, games, slides or any editor.
+ * - Seamless loop WAV: exactly one loop long, so it repeats with no gap, like a GIF for sound.
  * - MIDI: the notes, for GarageBand, Logic, Ableton, MuseScore and so on, where they can be
  *   re-voiced and edited.
  */
@@ -10,17 +11,36 @@ import type { Tune, Voice } from "./tune";
 
 // ---------- WAV (16-bit PCM) ----------
 
-export function encodeWav(channels: Float32Array[], sampleRate: number): Uint8Array {
+/**
+ * Folds whatever rings on past `frames` back onto the start, so a loop played on repeat carries
+ * its last notes' tails into the next pass instead of cutting them off.
+ */
+export function foldTail(channel: Float32Array, frames: number): Float32Array {
+  const out = new Float32Array(frames);
+  if (frames <= 0) return out;
+  for (let i = 0; i < channel.length; i++) out[i % frames]! += channel[i]!;
+  return out;
+}
+
+/** The "smpl" chunk: tells samplers and game engines to loop the whole file forever. */
+const SMPL_BYTES = 8 + 36 + 24;
+
+export function encodeWav(
+  channels: Float32Array[],
+  sampleRate: number,
+  options: { loop?: boolean } = {},
+): Uint8Array {
   const count = channels.length;
   const frames = channels[0]?.length ?? 0;
   const dataBytes = frames * count * 2;
-  const bytes = new Uint8Array(44 + dataBytes);
+  const extra = options.loop ? SMPL_BYTES : 0;
+  const bytes = new Uint8Array(44 + dataBytes + extra);
   const view = new DataView(bytes.buffer);
   const text = (at: number, s: string) => {
     for (let i = 0; i < s.length; i++) view.setUint8(at + i, s.charCodeAt(i));
   };
   text(0, "RIFF");
-  view.setUint32(4, 36 + dataBytes, true);
+  view.setUint32(4, 36 + dataBytes + extra, true);
   text(8, "WAVE");
   text(12, "fmt ");
   view.setUint32(16, 16, true); // fmt chunk size
@@ -40,6 +60,17 @@ export function encodeWav(channels: Float32Array[], sampleRate: number): Uint8Ar
       at += 2;
     }
   }
+  if (options.loop) {
+    text(at, "smpl");
+    view.setUint32(at + 4, SMPL_BYTES - 8, true);
+    view.setUint32(at + 16, Math.round(1e9 / sampleRate), true); // nanoseconds per sample
+    view.setUint32(at + 20, 60, true); // unity note: middle C
+    view.setUint32(at + 36, 1, true); // one loop
+    const loop = at + 44;
+    view.setUint32(loop + 8, 0, true); // start frame
+    view.setUint32(loop + 12, Math.max(0, frames - 1), true); // end frame
+    view.setUint32(loop + 20, 0, true); // play count: 0 means forever
+  }
   return bytes;
 }
 
@@ -51,6 +82,7 @@ const US_PER_BEAT = Math.round(60_000_000 / MIDI_BPM);
 
 /** General MIDI instrument closest to each voice, so the file opens sounding similar. */
 export const MIDI_PROGRAM: Record<Voice, number> = {
+  grand: 0, // Acoustic Grand Piano
   piano: 0, // Acoustic Grand Piano
   chip: 80, // Lead 1 (square)
   organ: 16, // Drawbar Organ
@@ -122,8 +154,8 @@ export function encodeMidi(tune: Tune, loops = 1): Uint8Array {
 }
 
 /** A file name from the voice and time: "pocket-keys-toy-2026-11-22-1430". */
-export function fileName(voice: Voice, ext: "wav" | "mid", date = new Date()): string {
+export function fileName(voice: Voice, ext: "wav" | "mid", date = new Date(), suffix = ""): string {
   const p = (n: number) => String(n).padStart(2, "0");
   const stamp = `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}-${p(date.getHours())}${p(date.getMinutes())}`;
-  return `pocket-keys-${voice}-${stamp}.${ext}`;
+  return `pocket-keys-${voice}${suffix ? `-${suffix}` : ""}-${stamp}.${ext}`;
 }
