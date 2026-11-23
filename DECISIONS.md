@@ -148,6 +148,9 @@ Actual latency depends on the device and wasn't measured.
 **Same toolchain as the other Lab apps** (build default): React, Vite, TypeScript (strict),
 Vitest and Playwright, relative paths so it runs at any address.
 
+**No GitHub link in the structured data while the repo is private (2026-11-23, build
+default).** It pointed at a page visitors can't open. Add `sameAs` back if the repo goes public.
+
 ## Deliberately not done (yet)
 
 - A drum-pad beat, a chord helper, "safe" scale highlighting, Web MIDI for a real keyboard and

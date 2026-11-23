@@ -32,7 +32,6 @@ function seoTags(site: string): string {
       url: "https://jayfox.design/lab",
     },
     license: "https://opensource.org/licenses/MIT",
-    sameAs: "https://github.com/jalex929/pocket-keys",
   };
   return [
     `<link rel="canonical" href="${site}/" />`,
