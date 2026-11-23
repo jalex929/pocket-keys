@@ -4,7 +4,7 @@
  * on-screen key lights.
  */
 
-import { notesInWindow, type Tune } from "../engine/tune";
+import { notesInWindow, soundLength, type Tune } from "../engine/tune";
 import type { Synth } from "./synth";
 
 const TICK_MS = 25;
@@ -36,7 +36,8 @@ export class LoopPlayer {
       const until = Math.max(0, elapsed) + LOOKAHEAD_MS;
       for (const { note, at } of notesInWindow(tune, scheduledUntil, until)) {
         const on = startAudio + at / 1000;
-        const off = on + note.length / 1000;
+        // The sound can ring on (sustain pedal); the key on screen goes up when it did.
+        const off = on + soundLength(tune, note) / 1000;
         const release = this.synth.noteOn(note.midi, tune.voice, on);
         release(off);
         this.releases.push(release);

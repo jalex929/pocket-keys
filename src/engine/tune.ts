@@ -38,11 +38,36 @@ export interface TuneNote {
   length: number;
 }
 
+/** A stretch of time the sustain pedal was down (milliseconds, like notes). */
+export interface PedalSpan {
+  start: number;
+  length: number;
+}
+
 export interface Tune {
   voice: Voice;
   /** Loop length in milliseconds (from the start of recording to Stop). */
   length: number;
+  /** Each key: when it went down and how long it was held. */
   notes: TuneNote[];
+  /**
+   * When the sustain pedal was down. Kept apart from the notes, like a real keyboard does, so
+   * keys go up on playback when they went up while recording, while the sound rings on.
+   */
+  pedal?: PedalSpan[];
+}
+
+/**
+ * How long a note sounds: until its key went up, or, if the pedal was down then, until the
+ * pedal lifted. Never past the end of the loop.
+ */
+export function soundLength(tune: Tune, note: TuneNote): number {
+  const keyUp = note.start + note.length;
+  let end = keyUp;
+  for (const p of tune.pedal ?? []) {
+    if (p.start <= keyUp && keyUp < p.start + p.length) end = Math.max(end, p.start + p.length);
+  }
+  return Math.min(end, tune.length) - note.start;
 }
 
 /** Longest tune kept: enough for a riff, short enough for a link. */
@@ -59,6 +84,11 @@ export class Recorder {
   private t0: number | null;
   private readonly open = new Map<number, number>();
   private readonly notes: TuneNote[] = [];
+  private readonly pedal: PedalSpan[] = [];
+  /** When the pedal went down (null while it's up). */
+  private pedalAt: number | null = null;
+  /** The pedal went down before the first note started the clock. */
+  private pedalWaiting = false;
 
   constructor(startTime?: number) {
     this.t0 = startTime ?? null;
@@ -80,7 +110,10 @@ export class Recorder {
   }
 
   noteOn(midi: number, now: number) {
-    if (this.t0 === null) this.t0 = now;
+    if (this.t0 === null) {
+      this.t0 = now;
+      if (this.pedalWaiting) this.pedalAt = 0;
+    }
     if (this.full(now)) return;
     if (this.open.has(midi)) this.noteOff(midi, now);
     this.open.set(midi, this.elapsed(now));
@@ -94,9 +127,23 @@ export class Recorder {
     this.notes.push({ midi, start, length: Math.max(30, end - start) });
   }
 
+  pedalDown(now: number) {
+    if (this.t0 === null) this.pedalWaiting = true;
+    else if (this.pedalAt === null && !this.full(now)) this.pedalAt = this.elapsed(now);
+  }
+
+  pedalUp(now: number) {
+    this.pedalWaiting = false;
+    if (this.pedalAt === null) return;
+    const end = Math.min(this.elapsed(now), MAX_TUNE_MS);
+    if (end > this.pedalAt) this.pedal.push({ start: this.pedalAt, length: end - this.pedalAt });
+    this.pedalAt = null;
+  }
+
   /** Ends the recording. Returns null if nothing was played. */
   stop(now: number, voice: Voice): Tune | null {
     for (const midi of [...this.open.keys()]) this.noteOff(midi, now);
+    this.pedalUp(now);
     if (this.notes.length === 0) return null;
     const length = Math.max(MIN_TUNE_MS, Math.min(MAX_TUNE_MS, Math.round(this.elapsed(now))));
     const notes = this.notes
@@ -107,7 +154,13 @@ export class Recorder {
         length: Math.round(Math.min(n.length, length - n.start)),
       }))
       .sort((a, b) => a.start - b.start || a.midi - b.midi);
-    return { voice, length, notes };
+    const pedal = this.pedal
+      .filter((p) => p.start < length)
+      .map((p) => ({
+        start: Math.round(p.start),
+        length: Math.round(Math.min(p.length, length - p.start)),
+      }));
+    return pedal.length ? { voice, length, notes, pedal } : { voice, length, notes };
   }
 }
 
@@ -135,6 +188,7 @@ export function notesInWindow(
 //
 // A tune becomes a short text string: version, voice, length, then each note as
 // midi.start.length in base 36 with times in 10 ms steps. Example: "1~toy~bk~1o.0.f~1q.g.f".
+// Sustain pedal spans follow as P.start.length (capital P can't be a base-36 note).
 
 const VERSION = "1";
 const STEP_MS = 10;
@@ -142,7 +196,8 @@ const STEP_MS = 10;
 export function encodeTune(tune: Tune): string {
   const n = (ms: number) => Math.round(ms / STEP_MS).toString(36);
   const notes = tune.notes.map((x) => `${x.midi.toString(36)}.${n(x.start)}.${n(x.length)}`);
-  return [VERSION, tune.voice, n(tune.length), ...notes].join("~");
+  const pedal = (tune.pedal ?? []).map((p) => `P.${n(p.start)}.${n(p.length)}`);
+  return [VERSION, tune.voice, n(tune.length), ...notes, ...pedal].join("~");
 }
 
 /** Reads a share string. Returns null for anything malformed, never throws. */
@@ -157,8 +212,16 @@ export function decodeTune(text: string): Tune | null {
   const noteParts = parts.slice(3);
   if (noteParts.length > MAX_NOTES) return null;
   const notes: TuneNote[] = [];
+  const pedal: PedalSpan[] = [];
   for (const part of noteParts) {
     const [m, s, l] = part.split(".");
+    if (m === "P") {
+      const start = num(s) * STEP_MS;
+      const len = num(l) * STEP_MS;
+      if (![start, len].every(Number.isFinite) || start >= length || len <= 0) return null;
+      pedal.push({ start, length: Math.min(len, length - start) });
+      continue;
+    }
     const midi = num(m);
     const start = num(s) * STEP_MS;
     const len = num(l) * STEP_MS;
@@ -166,5 +229,6 @@ export function decodeTune(text: string): Tune | null {
     if (midi < 21 || midi > 108 || start >= length || len <= 0) return null;
     notes.push({ midi, start, length: Math.min(len, length - start) });
   }
-  return { voice, length, notes };
+  if (notes.length === 0) return null;
+  return pedal.length ? { voice, length, notes, pedal } : { voice, length, notes };
 }

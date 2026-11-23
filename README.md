@@ -23,8 +23,12 @@ project, or share it as a link. Free, no sign-up.
     out across sounds, so switching doesn't jump the volume.
 - **Sustain works like a piano's damper pedal:** keys pop back up when you let go, and the
   sound keeps ringing until you lift the pedal (Shift, or the Sustain switch).
-- **Octave, sustain, note names, volume.** Voice, volume and note names are remembered.
-- **Loop:** record up to 30 seconds, then play it on repeat and play along.
+- **Octave, sustain, note names, volume.** Sound, volume, note names and colors are remembered.
+- **Six color palettes** for the instrument and the desk around it: Classic, Bubblegum, Mint,
+  Sunset, Retro beige and Night (a dark page). Every text pairing meets 4.5:1 contrast.
+- **Loop:** record up to 30 seconds, then play it on repeat and play along. The sustain pedal
+  is recorded as its own track, so on playback keys go down and up when you pressed them while
+  the sound rings on as it did.
 - **Save:** each option says what you get before you click, and the page names the file once
   it's saved. **Sound (.wav)** is a recording of what you heard; **Seamless loop (.wav)** is
   exactly one loop with the ringing tail folded back to the start, so it repeats with no gap
@@ -59,7 +63,8 @@ npm run test:e2e   # Playwright, desktop Chrome + Pixel 7 (build first: npm run 
 
 ## Tested
 
-- **Unit (Vitest, 30):** the drum kit layout and its General MIDI drum-channel export; note math and names; the keyboard layout (every letter lands on the
+- **Unit (Vitest, 37):** the sustain pedal track (key lengths, ring lengths, never past the
+  loop, share links old and new, MIDI controller 64); the drum kit layout and its General MIDI drum-channel export; note math and names; the keyboard layout (every letter lands on the
   right color of key); recording, time limits and loop windows (every note scheduled exactly
   once); share links round-trip and malformed links are rejected; WAV header and samples; MIDI
   structure, instrument, note order and repeats.
@@ -68,7 +73,9 @@ npm run test:e2e   # Playwright, desktop Chrome + Pixel 7 (build first: npm run 
   chords, Shift sustain (the key pops up, sound keeps going) and octave change; record, loop
   playback, sound, seamless-loop and notes downloads (the WAV is checked to be a real, non-silent
   file, the loop file carries its loop marker, and the page names each saved file); picking sounds from the grouped dropdown (drum kit names the drum, the choice is remembered);
-  Tab and Enter; shared links open; no sideways scroll. Every sound was also rendered to WAV
+  playback releases keys when they were released even with sustain on; palettes recolor the
+  page, keep the swatches in place and are remembered; Tab and Enter; shared links open; no
+  sideways scroll. Every sound was also rendered to WAV
   and measured for loudness, with no console errors.
 - **Not tested:** how the new sounds feel to a person (only measured, not listened to by
   ear yet); whether every app honors the seamless loop's marker (a video editor's own

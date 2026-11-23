@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LoopPlayer } from "./audio/player";
 import { Synth, VOICE_GROUPS, VOICE_INFO, type VoiceGroup } from "./audio/synth";
 import { drumFor } from "./engine/drums";
+import { applyPalette, isPalette, PALETTES, type PaletteId } from "./ui/palettes";
 import { encodeMidi, fileName } from "./engine/files";
 import { labelsFor, noteForKey } from "./engine/keymap";
 import { baseNote, MAX_SHIFT, MIN_SHIFT, noteName } from "./engine/notes";
@@ -28,10 +29,11 @@ interface Prefs {
   voice: Voice;
   volume: number;
   showNames: boolean;
+  palette: PaletteId;
 }
 
 function loadPrefs(): Prefs {
-  const fallback: Prefs = { voice: "grand", volume: 0.7, showNames: false };
+  const fallback: Prefs = { voice: "grand", volume: 0.7, showNames: false, palette: "classic" };
   try {
     const raw = JSON.parse(localStorage.getItem(PREFS_KEY) ?? "null") as Partial<Prefs> | null;
     if (!raw) return fallback;
@@ -40,6 +42,7 @@ function loadPrefs(): Prefs {
       volume:
         typeof raw.volume === "number" ? Math.max(0, Math.min(1, raw.volume)) : fallback.volume,
       showNames: raw.showNames === true,
+      palette: isPalette(raw.palette) ? raw.palette : fallback.palette,
     };
   } catch {
     return fallback;
@@ -124,6 +127,8 @@ export function App() {
     [synth],
   );
 
+  useEffect(() => applyPalette(prefs.palette), [prefs.palette]);
+
   useEffect(() => {
     synth.setVolume(prefs.volume);
     try {
@@ -137,11 +142,11 @@ export function App() {
 
   // A key pops back up as soon as you let go of it. Sustain only keeps the sound ringing, like
   // the damper pedal on a piano, so the light and the sound are let go of separately.
-  const unlight = useCallback((h: Held) => setUserLit((m) => bump(m, h.midi, -1)), []);
-  const silence = useCallback((h: Held) => {
-    h.release();
+  const unlight = useCallback((h: Held) => {
+    setUserLit((m) => bump(m, h.midi, -1));
     recorder.current?.noteOff(h.midi, performance.now());
   }, []);
+  const silence = useCallback((h: Held) => h.release(), []);
   const letGo = useCallback(
     (h: Held) => {
       unlight(h);
@@ -178,8 +183,11 @@ export function App() {
   );
 
   // Lifting the pedal silences everything it was holding (those keys are already back up).
+  // A recording keeps the pedal as its own track, so playback rings the same way.
   useEffect(() => {
-    if (sustain) return;
+    const now = performance.now();
+    if (sustain) return recorder.current?.pedalDown(now);
+    recorder.current?.pedalUp(now);
     for (const h of sustained.current.splice(0)) silence(h);
   }, [sustain, silence]);
 
@@ -243,6 +251,7 @@ export function App() {
     synth.wake();
     // The clock starts on the first note, so the loop doesn't open with silence.
     recorder.current = new Recorder();
+    if (live.current.sustain) recorder.current.pedalDown(performance.now());
     setRecording(true);
     setShared(false);
     setMessage("Recording starts with your first note. Press Stop when you're done.");
@@ -370,8 +379,8 @@ export function App() {
 
   const status = recording
     ? recorder.current?.started
-      ? `● REC ${formatTime(clock)} / ${formatTime(MAX_TUNE_MS)}`
-      : "● REC · PLAY TO START"
+      ? `REC ${formatTime(clock)} / ${formatTime(MAX_TUNE_MS)}`
+      : "REC · PLAY TO START"
     : playing && tune
       ? `▶ LOOP ${formatTime(clock)} / ${formatTime(tune.length)}`
       : tune
@@ -387,6 +396,38 @@ export function App() {
           </svg>
           <span className="topbar__back-text">jayfox.design/lab</span>
         </a>
+        <fieldset className="palettes">
+          <legend className="visually-hidden">Colors</legend>
+          <span className="palettes__label" aria-hidden="true">
+            Colors
+          </span>
+          <span className="palettes__row">
+            {PALETTES.map((pal) => (
+              <label key={pal.id} className="palette" title={pal.label}>
+                <input
+                  type="radio"
+                  name="palette"
+                  value={pal.id}
+                  aria-label={pal.label}
+                  checked={prefs.palette === pal.id}
+                  onChange={() => setPrefs((p) => ({ ...p, palette: pal.id }))}
+                />
+                <span
+                  className="palette__swatch"
+                  aria-hidden="true"
+                  style={{
+                    ["--swatch-body" as string]: pal.body,
+                    ["--swatch-accent" as string]: pal.accent,
+                  }}
+                />
+              </label>
+            ))}
+          </span>
+          {/* On its own line, so the swatches never shift when the name changes. */}
+          <span className="palettes__current" aria-hidden="true">
+            {PALETTES.find((x) => x.id === prefs.palette)!.label}
+          </span>
+        </fieldset>
       </header>
 
       <main className="stage">
@@ -423,7 +464,13 @@ export function App() {
                 {voiceInfo.label.toUpperCase()} · {noteName(low)}–{noteName(high)}
                 {sustain ? " · SUSTAIN" : ""}
               </span>
-              <span className={`lcd__line lcd__status${recording ? " lcd__status--rec" : ""}`}>
+              <span className="lcd__line lcd__status">
+                {/* Only the red light blinks; the time stays steady so it can be read. */}
+                {recording ? (
+                  <span className="lcd__rec" aria-hidden="true">
+                    ●{" "}
+                  </span>
+                ) : null}
                 {status}
               </span>
             </div>

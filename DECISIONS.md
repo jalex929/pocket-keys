@@ -60,6 +60,24 @@ drum instead of the note.
 **Even loudness across sounds** (build default). Each sound was rendered to WAV and measured;
 a per-sound trim brings them within a similar range so switching sounds doesn't jump.
 
+**The sustain pedal is recorded as its own track** (Jay's call: on playback keys should go
+down and up as you played them). Notes keep how long each key was held; the pedal's down and
+up times are stored beside them, the way real keyboards and MIDI do it (controller 64). On
+playback the key goes up when it did and the sound rings until the pedal lifted. Share links
+add the pedal as `P.start.length` entries, so older links still open. Trade-off: one more
+thing in the tune format.
+
+**Only the record light blinks** (Jay's call: the time flickered while recording). The red dot
+blinks; the running time stays steady and readable. Reduced motion turns the blink off.
+
+**Six color palettes** (Jay's call; the palettes proposed). Classic (navy and yellow),
+Bubblegum, Mint, Sunset, Retro beige (a light 90s body with dark text) and Night (the whole
+page goes dark). The styles use named color roles (body, accent, keys, desk, ink, card), and a
+palette swaps the roles. Every text pairing was checked to at least 4.5:1. The picker is a row
+of swatches in the top bar; the chosen one gets a check mark and an outline, and its name sits
+on its own line under the swatches so they never shift (Jay's call). Remembered with the other
+settings; the phone's address bar color follows the palette.
+
 **A seamless loop download, like a GIF for sound** (Jay's idea). One loop exactly, with the
 ringing tail folded back onto the start so it repeats with no gap or click, and a WAV loop
 marker (the `smpl` chunk) for samplers and game engines that read it.

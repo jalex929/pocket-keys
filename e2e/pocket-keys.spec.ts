@@ -198,3 +198,49 @@ test("picks a sound from the grouped list and plays it", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("combobox", { name: "Sound" })).toHaveValue("alien");
 });
+
+test("playback presses and releases keys as they were played, even with sustain on", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, "needs a physical keyboard");
+  await page.goto("/");
+  await page
+    .getByRole("switch", { name: "Sustain" })
+    .or(page.getByLabel("Sustain"))
+    .first()
+    .check();
+  await page.getByRole("button", { name: "Record a loop" }).click();
+  await page.keyboard.down("KeyZ");
+  await page.waitForTimeout(150);
+  await page.keyboard.up("KeyZ");
+  await page.waitForTimeout(4000);
+  await page.getByRole("button", { name: "Stop recording" }).click();
+
+  await page.getByRole("button", { name: "Play the loop" }).click();
+  const c4 = page.getByRole("button", { name: "C 4", exact: true });
+  await expect(c4).toHaveAttribute("aria-pressed", "true");
+  // The key goes back up when it did while recording, long before the pedal (held to the end
+  // of the 4-second loop) lets go. Slow test machines delay key events, so allow some slack.
+  await expect(c4).toHaveAttribute("aria-pressed", "false", { timeout: 2500 });
+  await page.getByRole("button", { name: "Stop the loop" }).click();
+});
+
+test("color palettes recolor the page, stay put and are remembered", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => document.fonts.ready); // measure after the web fonts settle
+  const night = page.getByRole("radio", { name: "Night" });
+  const last = page.locator(".palette__swatch").last();
+  const before = await last.boundingBox();
+  await night.check();
+  await expect(page.locator("html")).toHaveAttribute("data-palette", "night");
+  await expect(page.locator(".palettes__current")).toHaveText("Night");
+  // The swatches don't move when the name under them changes.
+  expect(await last.boundingBox()).toEqual(before);
+  const desk = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(desk).toBe("rgb(12, 13, 31)");
+  await page.reload();
+  await expect(page.getByRole("radio", { name: "Night" })).toBeChecked();
+  await page.getByRole("radio", { name: "Classic" }).check();
+  await expect(page.locator("html")).not.toHaveAttribute("data-palette", /.+/);
+});

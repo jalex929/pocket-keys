@@ -4,7 +4,7 @@
  */
 
 import { encodeWav, foldTail } from "../engine/files";
-import type { Tune } from "../engine/tune";
+import { soundLength, type Tune } from "../engine/tune";
 import { Synth } from "./synth";
 
 const SAMPLE_RATE = 44_100;
@@ -28,7 +28,7 @@ export async function renderWav(
     const offset = (loop * tune.length) / 1000;
     for (const n of tune.notes) {
       const on = offset + n.start / 1000;
-      synth.noteOn(n.midi, tune.voice, on)(on + n.length / 1000);
+      synth.noteOn(n.midi, tune.voice, on)(on + soundLength(tune, n) / 1000);
     }
   }
   const buffer = await ctx.startRendering();

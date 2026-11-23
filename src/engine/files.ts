@@ -139,6 +139,16 @@ export function encodeMidi(tune: Tune, loops = 1): Uint8Array {
       events.push({ tick: off, order: 0, bytes: [0x80 | channel, note, 0] });
     }
   }
+  // The sustain pedal is controller 64: 127 down, 0 up.
+  for (let loop = 0; loop < loops; loop++) {
+    const offset = loop * tune.length;
+    for (const p of tune.pedal ?? []) {
+      const down = msToTicks(offset + p.start);
+      const up = Math.max(down + 1, msToTicks(offset + p.start + p.length));
+      events.push({ tick: down, order: 1, bytes: [0xb0 | channel, 64, 127] });
+      events.push({ tick: up, order: 0, bytes: [0xb0 | channel, 64, 0] });
+    }
+  }
   // Note-offs before note-ons at the same moment, so a repeated note retriggers cleanly.
   events.sort((a, b) => a.tick - b.tick || a.order - b.order);
 

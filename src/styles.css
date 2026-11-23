@@ -22,6 +22,29 @@
   --font-display: "Fredoka", "Work Sans", system-ui, sans-serif;
   --font-body: "Work Sans", system-ui, sans-serif;
   --font-mono: "Source Code Pro", ui-monospace, monospace;
+
+  /* Color roles. Palettes (below) swap these; everything else uses them. */
+  --body: var(--navy);
+  --body-hi: var(--navy-3);
+  --on-body: #fff;
+  --on-body-soft: rgba(255, 255, 255, 0.78);
+  --on-body-faint: rgba(255, 255, 255, 0.3);
+  --accent: var(--yellow);
+  --accent-line: var(--yellow);
+  --on-accent: var(--navy);
+  --key: var(--cream);
+  --key-2: var(--cream-2);
+  --key-lit: #fff3c4;
+  --key-ink: var(--navy);
+  --bkey-hi: #2a2a7a;
+  --bkey: var(--navy-2);
+  --bkey-lo: #05053a;
+  --card: #fff;
+  --card-soft: var(--cream);
+  --card-hover: #fffbe6;
+  --line: var(--navy);
+  --shadow: rgba(0, 0, 82, 0.12);
+  --shadow-strong: rgba(0, 0, 82, 0.16);
   color-scheme: light;
 }
 
@@ -83,7 +106,7 @@ kbd {
   align-items: center;
   gap: 6px;
   min-height: 40px;
-  color: var(--navy);
+  color: var(--ink);
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 600;
@@ -92,7 +115,7 @@ kbd {
 
 .topbar__back:hover .topbar__back-text {
   text-decoration: underline;
-  text-decoration-color: var(--yellow);
+  text-decoration-color: var(--accent-line);
   text-decoration-thickness: 3px;
   text-underline-offset: 4px;
 }
@@ -142,9 +165,10 @@ kbd {
 .shared {
   margin: 0;
   padding: 10px 14px;
-  border: 2px solid var(--navy);
+  border: 2px solid var(--line);
   border-radius: 10px;
-  background: var(--yellow);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 600;
   justify-self: start;
 }
@@ -173,12 +197,12 @@ kbd {
 .instrument {
   padding: 16px 16px 18px;
   border-radius: 24px;
-  background: linear-gradient(180deg, var(--navy-3), var(--navy) 58%);
+  background: linear-gradient(180deg, var(--body-hi), var(--body) 58%);
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, 0.18),
     inset 0 -6px 0 rgba(0, 0, 0, 0.35),
-    10px 12px 0 rgba(0, 0, 82, 0.16);
-  color: #fff;
+    10px 12px 0 var(--shadow-strong);
+  color: var(--on-body);
 }
 
 .panel {
@@ -236,7 +260,7 @@ kbd {
   text-overflow: ellipsis;
 }
 
-.lcd__status--rec {
+.lcd__rec {
   animation: blink 1s steps(2, start) infinite;
 }
 
@@ -264,7 +288,7 @@ kbd {
   height: 12px;
   border-radius: 50%;
   box-shadow:
-    0 0 0 2px var(--navy),
+    0 0 0 2px var(--body),
     0 0 10px currentColor;
 }
 
@@ -277,7 +301,7 @@ kbd {
 }
 
 .sound__label {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--on-body-soft);
 }
 
 .sound__pick {
@@ -286,9 +310,9 @@ kbd {
   gap: 10px;
   min-height: 40px;
   padding: 0 4px 0 12px;
-  border: 2px solid var(--yellow);
+  border: 2px solid var(--accent);
   border-radius: 999px;
-  background: #fff;
+  background: var(--key);
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45);
 }
 
@@ -303,7 +327,7 @@ kbd {
   padding: 0 8px 0 0;
   border: 0;
   background: transparent;
-  color: var(--navy);
+  color: var(--key-ink);
   font: 600 16px var(--font-display);
   cursor: pointer;
 }
@@ -315,7 +339,7 @@ kbd {
 .sound__hint {
   flex-basis: 100%;
   margin: 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--on-body-soft);
   font-size: 13px;
 }
 
@@ -334,7 +358,7 @@ kbd {
 }
 
 .control .label {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--on-body-soft);
 }
 
 .stepper {
@@ -355,8 +379,8 @@ kbd {
   height: 36px;
   border: 0;
   border-radius: 50%;
-  background: var(--yellow);
-  color: var(--navy);
+  background: var(--accent);
+  color: var(--on-accent);
   font: 700 20px/1 var(--font-display);
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
   cursor: pointer;
@@ -392,7 +416,7 @@ kbd {
   height: 24px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 0 0 2px var(--on-body-faint);
 }
 
 .switch__track::after {
@@ -403,18 +427,18 @@ kbd {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--key);
   transition: transform 120ms;
 }
 
 .switch input:checked + .switch__track {
-  background: var(--yellow);
+  background: var(--accent);
 }
 
 .switch input:checked + .switch__track::after {
   transform: translateX(20px);
-  background: var(--navy);
-  box-shadow: inset 0 0 0 4px var(--navy);
+  background: var(--on-accent);
+  box-shadow: inset 0 0 0 4px var(--on-accent);
 }
 
 .switch input:focus-visible + .switch__track {
@@ -424,7 +448,7 @@ kbd {
 
 .volume input {
   width: 110px;
-  accent-color: var(--yellow);
+  accent-color: var(--accent);
 }
 
 /* ---------- Keys ---------- */
@@ -458,11 +482,11 @@ kbd {
 .key--white {
   margin: 0 1.5px;
   border-radius: 0 0 9px 9px;
-  background: linear-gradient(180deg, var(--cream-2), var(--cream) 14%);
+  background: linear-gradient(180deg, var(--key-2), var(--key) 14%);
   box-shadow:
-    inset 0 -8px 0 var(--cream-2),
+    inset 0 -8px 0 var(--key-2),
     0 3px 0 rgba(0, 0, 0, 0.5);
-  color: var(--navy);
+  color: var(--key-ink);
   transition:
     transform 50ms,
     box-shadow 50ms;
@@ -477,7 +501,7 @@ kbd {
   height: 60%;
   transform: translateX(-50%);
   border-radius: 0 0 7px 7px;
-  background: linear-gradient(180deg, #2a2a7a, var(--navy-2) 70%, #05053a);
+  background: linear-gradient(180deg, var(--bkey-hi), var(--bkey) 70%, var(--bkey-lo));
   box-shadow:
     inset 0 -6px 0 #05053a,
     0 3px 0 rgba(0, 0, 0, 0.6);
@@ -491,9 +515,9 @@ kbd {
 .key--white.key--on {
   transform: translateY(3px);
   box-shadow:
-    inset 0 -3px 0 var(--cream-2),
+    inset 0 -3px 0 var(--key-2),
     0 0 0 rgba(0, 0, 0, 0.5);
-  background: linear-gradient(180deg, var(--cream-2), #fff3c4 20%);
+  background: linear-gradient(180deg, var(--key-2), var(--key-lit) 20%);
 }
 
 .key--black.key--on {
@@ -549,7 +573,7 @@ kbd {
 .key--on .key__dot {
   background: var(--voice);
   box-shadow:
-    0 0 0 2px var(--navy),
+    0 0 0 2px var(--key-ink),
     0 0 10px var(--voice);
 }
 
@@ -573,10 +597,10 @@ kbd {
   display: grid;
   gap: 10px;
   padding: 16px;
-  border: 2px solid var(--navy);
+  border: 2px solid var(--line);
   border-radius: var(--radius);
-  background: #fff;
-  box-shadow: 6px 7px 0 rgba(0, 0, 82, 0.12);
+  background: var(--card);
+  box-shadow: 6px 7px 0 var(--shadow);
 }
 
 .loop__heading,
@@ -612,22 +636,22 @@ kbd {
   gap: 8px;
   min-height: 44px;
   padding: 0 18px;
-  border: 2px solid var(--navy);
+  border: 2px solid var(--line);
   border-radius: 999px;
-  background: #fff;
-  color: var(--navy);
+  background: var(--card);
+  color: var(--ink);
   font: 600 16px/1 var(--font-display);
-  box-shadow: 0 3px 0 var(--navy);
+  box-shadow: 0 3px 0 var(--line);
   cursor: pointer;
 }
 
 .button:hover:not(:disabled) {
-  background: #fffbe6;
+  background: var(--card-hover);
 }
 
 .button:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--navy);
+  box-shadow: 0 1px 0 var(--line);
 }
 
 .button:disabled {
@@ -636,7 +660,8 @@ kbd {
 }
 
 .button--rec {
-  background: var(--yellow);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .button--rec:hover:not(:disabled) {
@@ -651,8 +676,8 @@ kbd {
 }
 
 .button[aria-pressed="true"] {
-  background: var(--navy);
-  color: #fff;
+  background: var(--ink);
+  color: var(--card);
 }
 
 .button__icon {
@@ -664,7 +689,7 @@ kbd {
 .button__icon--rec {
   border-radius: 50%;
   background: var(--red);
-  box-shadow: 0 0 0 2px var(--navy);
+  box-shadow: 0 0 0 2px var(--line);
 }
 
 .button__icon--stop {
@@ -678,10 +703,10 @@ kbd {
 .repeat select {
   min-height: 44px;
   padding: 0 10px;
-  border: 2px solid var(--navy);
+  border: 2px solid var(--line);
   border-radius: 10px;
-  background: #fff;
-  color: var(--navy);
+  background: var(--card);
+  color: var(--ink);
   font: 600 15px var(--font-body);
 }
 
@@ -698,7 +723,7 @@ kbd {
 }
 
 .help__list kbd {
-  color: var(--navy);
+  color: var(--ink);
 }
 
 /* Touch screens: the keyboard-shortcut card isn't useful. */
@@ -800,7 +825,7 @@ kbd {
   padding: 0;
   border: 0;
   background: none;
-  color: #fff;
+  color: var(--on-body);
   cursor: pointer;
 }
 
@@ -816,7 +841,7 @@ kbd {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--key);
   box-shadow:
     0 4px 0 rgba(0, 0, 0, 0.5),
     inset 0 -3px 0 rgba(0, 0, 82, 0.15);
@@ -841,7 +866,7 @@ kbd {
   width: 18px;
   height: 20px;
   margin-left: 4px;
-  background: var(--navy);
+  background: var(--key-ink);
   clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
 
@@ -849,7 +874,7 @@ kbd {
   width: 16px;
   height: 16px;
   border-radius: 3px;
-  background: var(--navy);
+  background: var(--key-ink);
 }
 
 .transport__button:active:not(:disabled) .transport__icon,
@@ -870,7 +895,7 @@ kbd {
 }
 
 .transport__button.is-on:not(.transport__button--rec) .transport__icon {
-  background: var(--yellow);
+  background: var(--accent);
 }
 
 .transport__label {
@@ -1084,7 +1109,7 @@ kbd {
   padding: 12px;
   border: 2px solid var(--dot);
   border-radius: 12px;
-  background: var(--cream);
+  background: var(--card-soft);
 }
 
 .save__what {
@@ -1119,5 +1144,229 @@ kbd {
 }
 
 .help__credit a {
+  color: var(--ink);
+}
+
+/* ---------- Palettes ----------
+   Classic is the default (:root above). Each palette recolors the instrument and the desk
+   around it; every text pairing was checked to at least 4.5:1 contrast. */
+
+:root[data-palette="bubblegum"] {
+  --body: #9d174d;
+  --body-hi: #be2a68;
+  --accent: #99f6e4;
+  --accent-line: #e11d74;
+  --on-accent: #3b0a1f;
+  --key: #fff7fb;
+  --key-2: #f3dbe6;
+  --key-lit: #ccfbf1;
+  --key-ink: #3b0a1f;
+  --bkey-hi: #8a1846;
+  --bkey: #5e0d2f;
+  --bkey-lo: #33061a;
+  --desk: #fdf0f6;
+  --dot: rgba(157, 23, 77, 0.14);
+  --ink: #3b0a1f;
+  --muted: #7a3f58;
+  --line: #3b0a1f;
+  --card-soft: #fff7fb;
+  --card-hover: #fdf0f6;
+  --shadow: rgba(157, 23, 77, 0.14);
+  --shadow-strong: rgba(157, 23, 77, 0.2);
+}
+
+:root[data-palette="mint"] {
+  --body: #0b5d55;
+  --body-hi: #12786e;
+  --accent: #ffd166;
+  --accent-line: #0f9d8c;
+  --on-accent: #062e2a;
+  --key: #f7fffb;
+  --key-2: #d6eee6;
+  --key-lit: #fff1c7;
+  --key-ink: #062e2a;
+  --bkey-hi: #13564f;
+  --bkey: #083e38;
+  --bkey-lo: #03221f;
+  --desk: #e9f8f2;
+  --dot: rgba(11, 93, 85, 0.14);
+  --ink: #062e2a;
+  --muted: #3c6660;
+  --line: #062e2a;
+  --card-soft: #f7fffb;
+  --card-hover: #e9f8f2;
+  --shadow: rgba(11, 93, 85, 0.14);
+  --shadow-strong: rgba(11, 93, 85, 0.2);
+}
+
+:root[data-palette="sunset"] {
+  --body: #a8330a;
+  --body-hi: #c84a16;
+  --accent: #ffe08a;
+  --accent-line: #ea6a1f;
+  --on-accent: #3a1203;
+  --key: #fffaf2;
+  --key-2: #f2e0cc;
+  --key-lit: #ffefb8;
+  --key-ink: #3a1203;
+  --bkey-hi: #7f2c0e;
+  --bkey: #5a1d07;
+  --bkey-lo: #2e0e03;
+  --desk: #fff2e5;
+  --dot: rgba(168, 51, 10, 0.14);
+  --ink: #3a1203;
+  --muted: #7a4a33;
+  --line: #3a1203;
+  --card-soft: #fffaf2;
+  --card-hover: #fff2e5;
+  --shadow: rgba(168, 51, 10, 0.14);
+  --shadow-strong: rgba(168, 51, 10, 0.2);
+}
+
+/* A beige 90s home keyboard: light body, so its text turns dark. */
+:root[data-palette="retro"] {
+  --body: #d8cdb2;
+  --body-hi: #e8dfc8;
+  --on-body: #26241f;
+  --on-body-soft: rgba(38, 36, 31, 0.78);
+  --on-body-faint: rgba(38, 36, 31, 0.35);
+  --accent: #c62828;
+  --accent-line: #c62828;
+  --on-accent: #fff;
+  --key: #fffdf6;
+  --key-2: #e6dfcc;
+  --key-lit: #ffe3d6;
+  --key-ink: #26241f;
+  --bkey-hi: #4a4740;
+  --bkey: #2f2d29;
+  --bkey-lo: #171614;
+  --desk: #f3efe6;
+  --dot: rgba(38, 36, 31, 0.12);
+  --ink: #26241f;
+  --muted: #5c574b;
+  --line: #26241f;
+  --card-soft: #fffdf6;
+  --card-hover: #f3efe6;
+  --shadow: rgba(38, 36, 31, 0.12);
+  --shadow-strong: rgba(38, 36, 31, 0.18);
+}
+
+/* Dark desk: the page itself goes dark, not just the instrument. */
+:root[data-palette="night"] {
+  --body: #24275a;
+  --body-hi: #33377a;
+  --accent: #8be9fd;
+  --accent-line: #8be9fd;
+  --on-accent: #0a0b1f;
+  --key: #e8e8f6;
+  --key-2: #c9c9e0;
+  --key-lit: #c8f5ff;
+  --key-ink: #0a0b1f;
+  --bkey-hi: #1d1f45;
+  --bkey: #11122e;
+  --bkey-lo: #05061a;
+  --desk: #0c0d1f;
+  --dot: rgba(255, 255, 255, 0.07);
+  --ink: #ecebff;
+  --muted: #a9abcf;
+  --card: #17193a;
+  --card-soft: #1f2247;
+  --card-hover: #23264f;
+  --line: #9fa3e8;
+  --shadow: rgba(0, 0, 0, 0.35);
+  --shadow-strong: rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+/* The palette picker, in the top bar: swatches with their names. */
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.palettes {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 2px 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.palettes__label,
+.palettes__current {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.palettes__row {
+  display: flex;
+  gap: 8px;
+}
+
+.palette {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.palette input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Each swatch shows its body color with the accent as a dot, plus a check when chosen. */
+.palette__swatch {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--swatch-body);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.palette__swatch::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--swatch-accent);
+}
+
+.palette input:checked + .palette__swatch {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.palette input:checked + .palette__swatch::after {
+  content: "✓";
+  width: auto;
+  height: auto;
+  background: none;
+  color: var(--swatch-accent);
+  font: 700 15px/1 var(--font-body);
+}
+
+.palette input:focus-visible + .palette__swatch {
+  outline: 3px solid var(--sky);
+  outline-offset: 2px;
+}
+
+/* The chosen palette's name sits under the swatches, lined up with the first one. */
+.palettes__current {
+  grid-column: 2;
   color: var(--ink);
 }
